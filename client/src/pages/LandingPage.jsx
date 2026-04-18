@@ -273,6 +273,13 @@ const SEQUENCE_DURATION = 5500; // ms for intro to complete
 export default function LandingPage() {
   const navigate = useNavigate();
   const [phase, setPhase] = useState(0); // 0=boot, 1=ecg, 2=logo, 3=content
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const h = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, []);
   const [skipIntro, setSkipIntro] = useState(false);
 
   useEffect(() => {
@@ -511,7 +518,7 @@ export default function LandingPage() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '0 48px',
+            padding: isMobile ? '0 16px' : '0 48px',
             height: 70,
             background: 'rgba(3,7,18,0.8)',
             backdropFilter: 'blur(20px)',
@@ -533,7 +540,7 @@ export default function LandingPage() {
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
               }}>CureConnect</span>
             </div>
-            <div style={{ display: 'flex', gap: 32 }}>
+            <div style={{ display: isMobile ? 'none' : 'flex', gap: 32 }}>
               {['Features', 'Security', 'Doctors', 'Pricing'].map(item => (
                 <a key={item} href={`#${item.toLowerCase()}`} style={{
                   color: 'rgba(240,244,255,0.6)',
@@ -562,9 +569,10 @@ export default function LandingPage() {
             minHeight: '100vh',
             display: 'flex',
             alignItems: 'center',
-            padding: '120px 64px 80px',
+            padding: isMobile ? '90px 20px 60px' : '120px 64px 80px',
             position: 'relative',
-            gap: 80,
+            gap: isMobile ? 0 : 80,
+            flexDirection: isMobile ? 'column' : 'row',
           }}>
             {/* Left column — text */}
             <div style={{ flex: 1, maxWidth: 580 }}>
@@ -595,7 +603,7 @@ export default function LandingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.8 }}
                 style={{
-                  fontSize: 'clamp(40px, 5.5vw, 76px)',
+                  fontSize: isMobile ? 'clamp(32px, 8vw, 48px)' : 'clamp(40px, 5.5vw, 76px)',
                   fontWeight: 900,
                   lineHeight: 1.08,
                   letterSpacing: '-3px',
@@ -665,15 +673,15 @@ export default function LandingPage() {
               initial={{ opacity: 0, x: 60 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4, duration: 0.8 }}
-              style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+              style={{ flex: 1, display: isMobile ? 'none' : 'flex', justifyContent: 'center', alignItems: 'center' }}
             >
               <HeroCarousel />
             </motion.div>
           </section>
 
           {/* Stats */}
-          <section style={{ padding: '80px 48px', position: 'relative' }}>
-            <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 }}>
+          <section style={{ padding: isMobile ? '48px 16px' : '80px 48px', position: 'relative' }}>
+            <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 12 : 24 }}>
               {stats.map((stat, i) => (
                 <motion.div
                   key={stat.label}
@@ -693,7 +701,7 @@ export default function LandingPage() {
           </section>
 
           {/* Features */}
-          <section id="features" style={{ padding: '80px 48px', position: 'relative' }}>
+          <section id="features" style={{ padding: isMobile ? '48px 16px' : '80px 48px', position: 'relative' }}>
             <div style={{ maxWidth: 1200, margin: '0 auto' }}>
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
@@ -709,7 +717,7 @@ export default function LandingPage() {
                 </p>
               </motion.div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: isMobile ? 16 : 24 }}>
                 {features.map((feat, i) => (
                   <motion.div
                     key={feat.title}
@@ -744,7 +752,7 @@ export default function LandingPage() {
           </section>
 
           {/* CTA Section */}
-          <section style={{ padding: '100px 48px', position: 'relative' }}>
+          <section style={{ padding: isMobile ? '60px 16px' : '100px 48px', position: 'relative' }}>
             <div style={{ maxWidth: 800, margin: '0 auto', textAlign: 'center' }}>
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -752,7 +760,7 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 className="glass-card"
                 style={{
-                  padding: '64px',
+                  padding: isMobile ? '32px 20px' : '64px',
                   background: 'rgba(0,212,255,0.04)',
                   border: '1px solid rgba(0,212,255,0.15)',
                   boxShadow: '0 0 80px rgba(0,212,255,0.08)',
@@ -766,7 +774,7 @@ export default function LandingPage() {
                 <p style={{ color: 'rgba(240,244,255,0.55)', fontSize: 17, marginBottom: 40, lineHeight: 1.7 }}>
                   Join millions of patients and doctors who trust CureConnect for their most important health decisions.
                 </p>
-                <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
+                <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
                   <button className="btn-primary" onClick={() => navigate('/select')} style={{ padding: '15px 40px', fontSize: 16 }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>I'm a Patient <ArrowRight size={18} /></span>
                   </button>
@@ -780,11 +788,13 @@ export default function LandingPage() {
 
           {/* Footer */}
           <footer style={{
-            padding: '40px 48px',
+            padding: isMobile ? '24px 16px' : '40px 48px',
             borderTop: '1px solid rgba(255,255,255,0.06)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 12,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <Heart size={16} color="#00d4ff" />
