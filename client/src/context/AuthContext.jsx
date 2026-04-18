@@ -80,6 +80,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('cc_token');
+    localStorage.removeItem('cc_user');
     delete api.defaults.headers.common['Authorization'];
     setUser(null);
   };

@@ -1,17 +1,15 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import ParticleField from '../components/ParticleField';
 import {
   Heart, Mail, Lock, User, Phone, Eye, EyeOff,
-  ArrowRight, Loader, AlertCircle, CheckCircle2
+  ArrowRight, Loader, AlertCircle, CheckCircle2, LogIn
 } from 'lucide-react';
 
-
-
-// ─── Stand-alone InputField (MUST be outside component to avoid re-mount) ───
-function InputField({ icon: Icon, placeholder, type = 'text', value, onChange }) {
+// ─── Reusable icon-prefixed input (defined OUTSIDE to prevent re-mount) ──────
+function InputField({ icon: Icon, placeholder, type = 'text', value, onChange, required = false }) {
   return (
     <div style={{ position: 'relative' }}>
       <Icon size={16} style={{
@@ -25,7 +23,7 @@ function InputField({ icon: Icon, placeholder, type = 'text', value, onChange })
         placeholder={placeholder}
         value={value}
         onChange={e => onChange(e.target.value)}
-        required
+        required={required}
         className="input-glass"
         style={{ paddingLeft: 42 }}
         autoComplete="off"
@@ -40,62 +38,91 @@ export default function AuthPage() {
   const { login, register } = useAuth();
 
   const defaultRole = params.get('role') || 'patient';
-  const [mode, setMode] = useState('login');
-  const [role, setRole] = useState(defaultRole);
-  const [showPass, setShowPass] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [mode, setMode]           = useState('login');
+  const [role, setRole]           = useState(defaultRole);
+  const [showPass, setShowPass]   = useState(false);
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState('');
+  const [success, setSuccess]     = useState('');
+  // Special flag: email already exists in DB → prompt user to switch to sign-in
+  const [alreadyExists, setAlreadyExists] = useState(false);
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [phone, setPhone] = useState('');
+  // Form fields
+  const [name, setName]                   = useState('');
+  const [email, setEmail]                 = useState('');
+  const [password, setPassword]           = useState('');
+  const [phone, setPhone]                 = useState('');
   const [specialization, setSpecialization] = useState('');
-  const [hospital, setHospital] = useState('');
+  const [hospital, setHospital]           = useState('');
   const [licenseNumber, setLicenseNumber] = useState('');
-  const [bloodGroup, setBloodGroup] = useState('');
-  const [gender, setGender] = useState('');
+  const [bloodGroup, setBloodGroup]       = useState('');
+  const [gender, setGender]               = useState('');
 
+  // ── Switch to sign-in tab, keeping the email pre-filled ─────────────────
+  const switchToSignIn = () => {
+    setMode('login');
+    setError('');
+    setAlreadyExists(false);
+    setSuccess('Your email is already registered — just sign in below! 👇');
+  };
+
+  // ── Main form submit ─────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+    setAlreadyExists(false);
 
-    // Basic client-side validation
+    // Client-side validation for register
     if (mode === 'register') {
-      if (!name.trim()) { setError('Full name is required.'); return; }
-      if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
+      if (!name.trim())          { setError('Full name is required.'); return; }
+      if (!email.trim())         { setError('Email address is required.'); return; }
+      if (password.length < 6)   { setError('Password must be at least 6 characters.'); return; }
     }
 
     setLoading(true);
     try {
       if (mode === 'login') {
+        // ── SIGN IN ──────────────────────────────────────────────────────
         const data = await login(email, password);
-        // login returns the raw API response; user object is the full payload
-        const role = data.role || data?.user?.role;
-        navigate(role === 'doctor' ? '/doctor' : '/patient');
+        const userRole = data?.role;
+        navigate(userRole === 'doctor' ? '/doctor' : '/patient');
+
       } else {
+        // ── REGISTER ─────────────────────────────────────────────────────
         const userData = {
           name, email, password, role, phone,
           specialization, hospital, licenseNumber, bloodGroup, gender
         };
         const data = await register(userData);
-        setSuccess('✅ Account created! Redirecting...');
-        const userRole = data.role || data?.user?.role;
-        setTimeout(() => navigate(userRole === 'doctor' ? '/doctor' : '/patient'), 800);
+        setSuccess('✅ Account created! Taking you to your dashboard...');
+        const userRole = data?.role;
+        setTimeout(() => navigate(userRole === 'doctor' ? '/doctor' : '/patient'), 900);
       }
     } catch (err) {
-      // err is already a human-readable string from AuthContext
-      setError(typeof err === 'string' ? err : (err?.message || 'Something went wrong. Please try again.'));
+      const msg = typeof err === 'string' ? err : (err?.message || 'Something went wrong. Please try again.');
+
+      // ── Smart detection: email already registered ─────────────────────
+      // The backend returns exactly this string in auth.js
+      const isDuplicate =
+        msg.toLowerCase().includes('already registered') ||
+        msg.toLowerCase().includes('already exists') ||
+        msg.toLowerCase().includes('please sign in');
+
+      if (isDuplicate && mode === 'register') {
+        setAlreadyExists(true);   // show the special "sign in instead" banner
+        setError('');             // clear generic error — we have the smart one
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const isDoctor = role === 'doctor';
+  const isDoctor   = role === 'doctor';
   const accentColor = isDoctor ? '#8b5cf6' : '#00d4ff';
-  const accentGrad = isDoctor
+  const accentGrad  = isDoctor
     ? 'linear-gradient(135deg, #8b5cf6, #ec4899)'
     : 'linear-gradient(135deg, #00d4ff, #00ff88)';
 
@@ -110,7 +137,7 @@ export default function AuthPage() {
       <div className="bg-grid" />
       <ParticleField count={35} color={isDoctor ? '139, 92, 246' : '0, 212, 255'} />
 
-      {/* Form panel */}
+      {/* ── Centered card ── */}
       <div style={{
         flex: 1,
         display: 'flex',
@@ -124,7 +151,7 @@ export default function AuthPage() {
           transition={{ duration: 0.6 }}
           style={{ width: '100%', maxWidth: 480 }}
         >
-          {/* Back */}
+          {/* Back button */}
           <button
             onClick={() => navigate('/select')}
             style={{
@@ -188,13 +215,13 @@ export default function AuthPage() {
             ))}
           </div>
 
-          {/* Mode tabs */}
+          {/* Sign In / Create Account tabs */}
           <div style={{ display: 'flex', marginBottom: 28, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             {['login', 'register'].map(m => (
               <button
                 key={m}
                 type="button"
-                onClick={() => { setMode(m); setError(''); setSuccess(''); }}
+                onClick={() => { setMode(m); setError(''); setSuccess(''); setAlreadyExists(false); }}
                 style={{
                   flex: 1, padding: '13px', border: 'none', background: 'none',
                   cursor: 'pointer', fontSize: 15,
@@ -209,67 +236,72 @@ export default function AuthPage() {
             ))}
           </div>
 
-          {/* Form */}
+          {/* ── FORM ── */}
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
             {/* Register-only fields */}
-            {mode === 'register' && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
-              >
-                {/* Name */}
-                <div style={{ position: 'relative' }}>
-                  <User size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'rgba(240,244,255,0.35)', zIndex: 1, pointerEvents: 'none' }} />
-                  <input
-                    type="text"
-                    placeholder="Full Name"
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    required
-                    className="input-glass"
-                    style={{ paddingLeft: 42 }}
-                  />
-                </div>
+            <AnimatePresence>
+              {mode === 'register' && (
+                <motion.div
+                  key="register-fields"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  style={{ display: 'flex', flexDirection: 'column', gap: 14, overflow: 'hidden' }}
+                >
+                  {/* Name */}
+                  <div style={{ position: 'relative' }}>
+                    <User size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'rgba(240,244,255,0.35)', zIndex: 1, pointerEvents: 'none' }} />
+                    <input
+                      type="text"
+                      placeholder="Full Name"
+                      value={name}
+                      onChange={e => setName(e.target.value)}
+                      required
+                      className="input-glass"
+                      style={{ paddingLeft: 42 }}
+                    />
+                  </div>
 
-                {/* Phone */}
-                <div style={{ position: 'relative' }}>
-                  <Phone size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'rgba(240,244,255,0.35)', zIndex: 1, pointerEvents: 'none' }} />
-                  <input
-                    type="tel"
-                    placeholder="Phone Number"
-                    value={phone}
-                    onChange={e => setPhone(e.target.value)}
-                    className="input-glass"
-                    style={{ paddingLeft: 42 }}
-                  />
-                </div>
+                  {/* Phone */}
+                  <div style={{ position: 'relative' }}>
+                    <Phone size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'rgba(240,244,255,0.35)', zIndex: 1, pointerEvents: 'none' }} />
+                    <input
+                      type="tel"
+                      placeholder="Phone Number (optional)"
+                      value={phone}
+                      onChange={e => setPhone(e.target.value)}
+                      className="input-glass"
+                      style={{ paddingLeft: 42 }}
+                    />
+                  </div>
 
-                {/* Doctor / Patient extra fields */}
-                {isDoctor ? (
-                  <>
-                    <input className="input-glass" placeholder="Specialization (e.g. Cardiology)" value={specialization} onChange={e => setSpecialization(e.target.value)} />
-                    <input className="input-glass" placeholder="Hospital / Clinic" value={hospital} onChange={e => setHospital(e.target.value)} />
-                    <input className="input-glass" placeholder="Medical License Number" value={licenseNumber} onChange={e => setLicenseNumber(e.target.value)} />
-                  </>
-                ) : (
-                  <>
-                    <select className="input-glass" value={bloodGroup} onChange={e => setBloodGroup(e.target.value)}
-                      style={{ background: 'rgba(10,22,40,0.9)', color: bloodGroup ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-                      <option value="">Blood Group (optional)</option>
-                      {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(g => <option key={g} value={g}>{g}</option>)}
-                    </select>
-                    <select className="input-glass" value={gender} onChange={e => setGender(e.target.value)}
-                      style={{ background: 'rgba(10,22,40,0.9)' }}>
-                      <option value="">Gender (optional)</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </>
-                )}
-              </motion.div>
-            )}
+                  {/* Doctor / Patient extra fields */}
+                  {isDoctor ? (
+                    <>
+                      <input className="input-glass" placeholder="Specialization (e.g. Cardiology)" value={specialization} onChange={e => setSpecialization(e.target.value)} />
+                      <input className="input-glass" placeholder="Hospital / Clinic" value={hospital} onChange={e => setHospital(e.target.value)} />
+                      <input className="input-glass" placeholder="Medical License Number" value={licenseNumber} onChange={e => setLicenseNumber(e.target.value)} />
+                    </>
+                  ) : (
+                    <>
+                      <select className="input-glass" value={bloodGroup} onChange={e => setBloodGroup(e.target.value)}
+                        style={{ background: 'rgba(10,22,40,0.9)', color: bloodGroup ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+                        <option value="">Blood Group (optional)</option>
+                        {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(g => <option key={g} value={g}>{g}</option>)}
+                      </select>
+                      <select className="input-glass" value={gender} onChange={e => setGender(e.target.value)}
+                        style={{ background: 'rgba(10,22,40,0.9)' }}>
+                        <option value="">Gender (optional)</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Email */}
             <div style={{ position: 'relative' }}>
@@ -306,10 +338,52 @@ export default function AuthPage() {
               </button>
             </div>
 
-            {/* Error / Success */}
-            <AnimatePresence>
-              {error && (
+            {/* ─── Alerts ─── */}
+            <AnimatePresence mode="wait">
+
+              {/* 1 ─ Email already in DB → smart "sign in" suggestion */}
+              {alreadyExists && (
                 <motion.div
+                  key="already-exists"
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  style={{
+                    padding: '14px 16px',
+                    background: 'rgba(250,204,21,0.08)',
+                    border: '1px solid rgba(250,204,21,0.35)',
+                    borderRadius: 12,
+                    lineHeight: 1.6,
+                  }}
+                >
+                  <p style={{ color: '#fbbf24', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
+                    ⚠️ This email is already registered!
+                  </p>
+                  <p style={{ color: 'rgba(240,244,255,0.6)', fontSize: 12, marginBottom: 10 }}>
+                    An account with <strong style={{ color: '#fbbf24' }}>{email}</strong> already exists in our database.
+                    Don't create a new one — just sign in!
+                  </p>
+                  <button
+                    type="button"
+                    onClick={switchToSignIn}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 7,
+                      padding: '9px 18px',
+                      background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+                      border: 'none', borderRadius: 8,
+                      color: '#000', fontWeight: 700, fontSize: 13,
+                      cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
+                    }}
+                  >
+                    <LogIn size={14} /> Sign In Instead
+                  </button>
+                </motion.div>
+              )}
+
+              {/* 2 ─ Generic error */}
+              {error && !alreadyExists && (
+                <motion.div
+                  key="error"
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
@@ -325,10 +399,14 @@ export default function AuthPage() {
                   {error}
                 </motion.div>
               )}
+
+              {/* 3 ─ Success */}
               {success && (
                 <motion.div
+                  key="success"
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10,
                     padding: '12px 16px',
@@ -341,35 +419,38 @@ export default function AuthPage() {
                   {success}
                 </motion.div>
               )}
+
             </AnimatePresence>
 
-            {/* Submit */}
-            <motion.button
-              type="submit"
-              disabled={loading}
-              whileHover={{ scale: loading ? 1 : 1.02 }}
-              whileTap={{ scale: loading ? 1 : 0.98 }}
-              style={{
-                padding: '14px',
-                background: accentGrad,
-                border: 'none', borderRadius: 12,
-                color: '#000', fontWeight: 800, fontSize: 16,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                fontFamily: 'Outfit, sans-serif',
-                opacity: loading ? 0.7 : 1, marginTop: 6,
-                boxShadow: `0 8px 30px ${accentColor}40`,
-              }}
-            >
-              {loading ? (
-                <><Loader size={18} style={{ animation: 'spin-slow 1s linear infinite' }} /> Processing...</>
-              ) : (
-                <>{mode === 'login' ? 'Sign In' : 'Create Account'} <ArrowRight size={18} /></>
-              )}
-            </motion.button>
+            {/* Submit button — hidden when showing "already exists" prompt */}
+            {!alreadyExists && (
+              <motion.button
+                type="submit"
+                disabled={loading}
+                whileHover={{ scale: loading ? 1 : 1.02 }}
+                whileTap={{ scale: loading ? 1 : 0.98 }}
+                style={{
+                  padding: '14px',
+                  background: accentGrad,
+                  border: 'none', borderRadius: 12,
+                  color: '#000', fontWeight: 800, fontSize: 16,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  fontFamily: 'Outfit, sans-serif',
+                  opacity: loading ? 0.7 : 1, marginTop: 6,
+                  boxShadow: `0 8px 30px ${accentColor}40`,
+                }}
+              >
+                {loading ? (
+                  <><Loader size={18} style={{ animation: 'spin-slow 1s linear infinite' }} /> Processing...</>
+                ) : (
+                  <>{mode === 'login' ? 'Sign In' : 'Create Account'} <ArrowRight size={18} /></>
+                )}
+              </motion.button>
+            )}
           </form>
 
-          {/* Server status hint */}
+          {/* Footer hint */}
           <div style={{
             marginTop: 20, padding: '12px 16px',
             background: 'rgba(255,255,255,0.03)',
@@ -377,9 +458,10 @@ export default function AuthPage() {
             borderRadius: 10,
           }}>
             <p style={{ fontSize: 12, color: 'rgba(240,244,255,0.35)', fontFamily: 'JetBrains Mono, monospace' }}>
-              🗄️ Accounts saved to MongoDB — make sure the server is running on port 5000
+              🗄️ Accounts saved to MongoDB — server must be running on port 5000
             </p>
           </div>
+
         </motion.div>
       </div>
     </div>
