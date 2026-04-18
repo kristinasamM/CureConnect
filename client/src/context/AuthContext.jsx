@@ -11,36 +11,75 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem('cc_user');
     const token = localStorage.getItem('cc_token');
-    if (stored && token) {
-      setUser(JSON.parse(stored));
+    const stored = localStorage.getItem('cc_user');
+
+    if (token && stored) {
+      // Immediately restore from localStorage so the UI doesn't flash blank
+      try { setUser(JSON.parse(stored)); } catch { /* ignore */ }
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+      // Verify token with backend in background — update user data if server is up
+      api.get('/auth/me')
+        .then(({ data }) => {
+          setUser(data);
+          localStorage.setItem('cc_user', JSON.stringify({ ...data, token }));
+        })
+        .catch(() => {
+          // Token is invalid / expired — clear session
+          // But only clear if we get a 401, not a network error
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const login = async (email, password) => {
-    const { data } = await api.post('/auth/login', { email, password });
-    localStorage.setItem('cc_token', data.token);
-    localStorage.setItem('cc_user', JSON.stringify(data));
-    api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
-    setUser(data);
-    return data;
+    try {
+      const { data } = await api.post('/auth/login', { email, password });
+      // data = { _id, name, email, role, avatar, healthScore, token }
+      localStorage.setItem('cc_token', data.token);
+      localStorage.setItem('cc_user', JSON.stringify(data));
+      api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+      setUser(data);
+      return data;
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        (err.code === 'ERR_NETWORK'
+          ? '⚠️ Cannot reach server. Make sure the backend is running on port 5000.'
+          : 'Login failed. Please try again.');
+      throw new Error(msg);
+    }
   };
 
+  /**
+   * REGISTER — calls POST /api/auth/register
+   * The backend hashes the password and saves to MongoDB automatically.
+   * Returns the new user object + JWT on success.
+   */
   const register = async (userData) => {
-    const { data } = await api.post('/auth/register', userData);
-    localStorage.setItem('cc_token', data.token);
-    localStorage.setItem('cc_user', JSON.stringify(data));
-    api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
-    setUser(data);
-    return data;
+    try {
+      const { data } = await api.post('/auth/register', userData);
+      // data = { _id, name, email, role, avatar, healthScore, token }
+      localStorage.setItem('cc_token', data.token);
+      localStorage.setItem('cc_user', JSON.stringify(data));
+      api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+      setUser(data);
+      return data;
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        (err.code === 'ERR_NETWORK'
+          ? '⚠️ Cannot reach server. Make sure the backend is running on port 5000.'
+          : 'Registration failed. Please try again.');
+      throw new Error(msg);
+    }
   };
 
   const logout = () => {
     localStorage.removeItem('cc_token');
-    localStorage.removeItem('cc_user');
     delete api.defaults.headers.common['Authorization'];
     setUser(null);
   };

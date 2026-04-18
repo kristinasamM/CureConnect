@@ -8,19 +8,7 @@ import {
   ArrowRight, Loader, AlertCircle, CheckCircle2
 } from 'lucide-react';
 
-// ─── MOCK AUTH — works completely without backend ───────────────────────────
-const DEMO_USERS_KEY = 'cc_demo_users';
 
-function getDemoUsers() {
-  try { return JSON.parse(localStorage.getItem(DEMO_USERS_KEY) || '[]'); }
-  catch { return []; }
-}
-
-function saveDemoUser(userData) {
-  const users = getDemoUsers();
-  users.push(userData);
-  localStorage.setItem(DEMO_USERS_KEY, JSON.stringify(users));
-}
 
 // ─── Stand-alone InputField (MUST be outside component to avoid re-mount) ───
 function InputField({ icon: Icon, placeholder, type = 'text', value, onChange }) {
@@ -73,74 +61,33 @@ export default function AuthPage() {
     e.preventDefault();
     setError('');
     setSuccess('');
-    setLoading(true);
 
+    // Basic client-side validation
+    if (mode === 'register') {
+      if (!name.trim()) { setError('Full name is required.'); return; }
+      if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
+    }
+
+    setLoading(true);
     try {
-      // Try real backend first
       if (mode === 'login') {
-        const user = await login(email, password);
-        navigate(user.role === 'doctor' ? '/doctor' : '/patient');
-        return;
+        const data = await login(email, password);
+        // login returns the raw API response; user object is the full payload
+        const role = data.role || data?.user?.role;
+        navigate(role === 'doctor' ? '/doctor' : '/patient');
       } else {
-        const userData = { name, email, password, role, phone, specialization, hospital, licenseNumber, bloodGroup, gender };
-        const user = await register(userData);
-        navigate(user.role === 'doctor' ? '/doctor' : '/patient');
-        return;
+        const userData = {
+          name, email, password, role, phone,
+          specialization, hospital, licenseNumber, bloodGroup, gender
+        };
+        const data = await register(userData);
+        setSuccess('✅ Account created! Redirecting...');
+        const userRole = data.role || data?.user?.role;
+        setTimeout(() => navigate(userRole === 'doctor' ? '/doctor' : '/patient'), 800);
       }
-    } catch (backendErr) {
-      // Backend offline — use demo/offline mode
-      try {
-        if (mode === 'login') {
-          // Check demo users
-          const users = getDemoUsers();
-          const found = users.find(u => u.email === email && u.password === password);
-          if (found) {
-            const { password: _, ...safeUser } = found;
-            localStorage.setItem('cc_user', JSON.stringify(safeUser));
-            localStorage.setItem('cc_token', 'demo_token_' + Date.now());
-            // Trigger auth context update via page reload with token stored
-            window.location.href = safeUser.role === 'doctor' ? '/doctor' : '/patient';
-            return;
-          }
-          setError('Invalid email or password. New here? Switch to "Create Account".');
-        } else {
-          // Register in demo mode
-          if (!name || !email || !password) {
-            setError('Name, email and password are required.');
-            setLoading(false);
-            return;
-          }
-          if (password.length < 6) {
-            setError('Password must be at least 6 characters.');
-            setLoading(false);
-            return;
-          }
-          const users = getDemoUsers();
-          if (users.find(u => u.email === email)) {
-            setError('Email already registered. Please sign in.');
-            setLoading(false);
-            return;
-          }
-          const newUser = {
-            _id: 'demo_' + Date.now(),
-            name, email, password, role, phone,
-            specialization, hospital, licenseNumber, bloodGroup, gender,
-            healthScore: 72,
-            avatar: '',
-            token: 'demo_token_' + Date.now(),
-          };
-          saveDemoUser(newUser);
-          const { password: _, ...safeUser } = newUser;
-          localStorage.setItem('cc_user', JSON.stringify(safeUser));
-          localStorage.setItem('cc_token', safeUser.token);
-          setSuccess('Account created! Taking you to your dashboard...');
-          setTimeout(() => {
-            window.location.href = role === 'doctor' ? '/doctor' : '/patient';
-          }, 1000);
-        }
-      } catch (demoErr) {
-        setError('Something went wrong. Please try again.');
-      }
+    } catch (err) {
+      // err is already a human-readable string from AuthContext
+      setError(typeof err === 'string' ? err : (err?.message || 'Something went wrong. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -422,7 +369,7 @@ export default function AuthPage() {
             </motion.button>
           </form>
 
-          {/* Offline hint */}
+          {/* Server status hint */}
           <div style={{
             marginTop: 20, padding: '12px 16px',
             background: 'rgba(255,255,255,0.03)',
@@ -430,7 +377,7 @@ export default function AuthPage() {
             borderRadius: 10,
           }}>
             <p style={{ fontSize: 12, color: 'rgba(240,244,255,0.35)', fontFamily: 'JetBrains Mono, monospace' }}>
-              ✅ Works offline — no server required to explore
+              🗄️ Accounts saved to MongoDB — make sure the server is running on port 5000
             </p>
           </div>
         </motion.div>
