@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import ECGLine from './ECGLine';
-
+// Aisha UI improvement
 export default function Navbar({ role }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
