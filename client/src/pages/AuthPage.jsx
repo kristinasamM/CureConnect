@@ -1,11 +1,12 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../context/AuthContext';
 import ParticleField from '../components/ParticleField';
 import {
   Heart, Mail, Lock, User, Phone, Eye, EyeOff,
-  ArrowRight, Loader, AlertCircle, CheckCircle2, LogIn
+  ArrowRight, Loader, AlertCircle, CheckCircle2, LogIn, Wifi, WifiOff
 } from 'lucide-react';
 
 // ─── Reusable icon-prefixed input (defined OUTSIDE to prevent re-mount) ──────
@@ -44,8 +45,16 @@ export default function AuthPage() {
   const [loading, setLoading]     = useState(false);
   const [error, setError]         = useState('');
   const [success, setSuccess]     = useState('');
-  // Special flag: email already exists in DB → prompt user to switch to sign-in
   const [alreadyExists, setAlreadyExists] = useState(false);
+  // Server health
+  const [serverOnline, setServerOnline] = useState(null); // null = checking, true/false
+
+  // Ping health endpoint on mount to detect if backend is running
+  useEffect(() => {
+    api.get('/health', { timeout: 3000 })
+      .then(() => setServerOnline(true))
+      .catch(() => setServerOnline(false));
+  }, []);
 
   // Form fields
   const [name, setName]                   = useState('');
@@ -165,6 +174,59 @@ export default function AuthPage() {
           >
             ← Change Role
           </button>
+
+          {/* ── Server online / offline indicator ── */}
+          <AnimatePresence>
+            {serverOnline === false && (
+              <motion.div
+                key="offline-banner"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 12,
+                  padding: '14px 16px',
+                  background: 'rgba(255,68,68,0.1)',
+                  border: '1px solid rgba(255,68,68,0.35)',
+                  borderRadius: 12,
+                  marginBottom: 24,
+                }}
+              >
+                <WifiOff size={18} style={{ color: '#ff6b6b', flexShrink: 0, marginTop: 2 }} />
+                <div>
+                  <p style={{ color: '#ff6b6b', fontWeight: 700, fontSize: 13, marginBottom: 5 }}>
+                    Backend server is offline
+                  </p>
+                  <p style={{ color: 'rgba(240,244,255,0.5)', fontSize: 12, fontFamily: 'JetBrains Mono, monospace', lineHeight: 1.8 }}>
+                    Open a <span style={{ color: '#fbbf24' }}>new terminal</span> and run:<br />
+                    <span style={{ color: '#00ff88' }}>cd c:\Users\SRUSHTI\OneDrive\Desktop\CureConnect\server</span><br />
+                    <span style={{ color: '#00ff88' }}>node index.js</span>
+                  </p>
+                </div>
+              </motion.div>
+            )}
+            {serverOnline === true && (
+              <motion.div
+                key="online-banner"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '8px 14px',
+                  background: 'rgba(0,255,136,0.07)',
+                  border: '1px solid rgba(0,255,136,0.2)',
+                  borderRadius: 8,
+                  marginBottom: 20,
+                }}
+              >
+                <Wifi size={14} style={{ color: '#00ff88' }} />
+                <span style={{ color: '#00ff88', fontSize: 12, fontFamily: 'JetBrains Mono, monospace' }}>
+                  Server online · MongoDB connected
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 36 }}>
@@ -392,11 +454,11 @@ export default function AuthPage() {
                     padding: '12px 16px',
                     background: 'rgba(255,68,68,0.1)',
                     border: '1px solid rgba(255,68,68,0.25)',
-                    borderRadius: 10, color: '#ff6b6b', fontSize: 13, lineHeight: 1.5,
+                    borderRadius: 10, color: '#ff6b6b', fontSize: 13, lineHeight: 1.6,
                   }}
                 >
                   <AlertCircle size={16} style={{ marginTop: 1, flexShrink: 0 }} />
-                  {error}
+                  <span style={{ whiteSpace: 'pre-line' }}>{error}</span>
                 </motion.div>
               )}
 
