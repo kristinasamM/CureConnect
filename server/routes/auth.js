@@ -4,7 +4,7 @@ const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 const router = express.Router();
 
-const generateToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+const generateToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET || 'cureconnect_super_secret_jwt_key_2024', { expiresIn: '30d' });
 
 // POST /api/auth/register  ← Creates a new user in MongoDB
 router.post('/register', async (req, res) => {
