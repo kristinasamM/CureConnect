@@ -482,7 +482,7 @@ export default function DoctorDashboard() {
 
         {/* ── Row 3: AI Suggestions ── */}
         <WidgetCard title="AI Diagnosis Alerts" icon={Brain} color="#8b5cf6">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14 }}>
+          <div className="ai-suggestions-grid">
             {aiSuggestions.map((s, i) => (
               <motion.div key={i} whileHover={{ y: -2 }} style={{ padding: '16px', background: s.urgency === 'high' ? 'rgba(255,68,68,0.08)' : s.urgency === 'medium' ? 'rgba(245,158,11,0.08)' : 'rgba(0,255,136,0.06)', border: `1px solid ${s.urgency === 'high' ? 'rgba(255,68,68,0.2)' : s.urgency === 'medium' ? 'rgba(245,158,11,0.2)' : 'rgba(0,255,136,0.15)'}`, borderRadius: 12 }}>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
