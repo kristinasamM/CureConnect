@@ -445,6 +445,7 @@ export default function LandingPage() {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        flexShrink: 0,
                       }}
                     >
                       <Heart size={28} color="#000" fill="#000" />
@@ -526,10 +527,15 @@ export default function LandingPage() {
               }}>
                 <Heart size={18} color="#000" fill="#000" />
               </div>
+              {/* Cursive name in navbar (no typewriter, just styled) */}
               <span style={{
-                fontSize: 20, fontWeight: 800,
+                fontFamily: '"Dancing Script", cursive',
+                fontSize: 24,
+                fontWeight: 700,
                 background: 'linear-gradient(135deg, #00d4ff, #00ff88)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                lineHeight: 1,
               }}>CureConnect</span>
             </div>
 
