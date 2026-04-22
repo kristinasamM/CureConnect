@@ -125,11 +125,25 @@ export default function Navbar({ role, onToggleSidebar }) {
     }
   };
 
-  const handleSelect = (item) => {
-    setQuery(item.name);
-    setShowSearch(false);
-    setActiveIndex(-1);
-  };
+const handleSelect = (item) => {
+  setQuery(item.name);
+  setShowSearch(false);
+  setActiveIndex(-1);
+
+  if (item.type === 'patient') {
+    navigate(role === 'doctor' ? '/doctor#patients' : '/patient#locker');
+  } else if (item.type === 'record') {
+    navigate(role === 'doctor' ? '/doctor#records' : '/patient#locker');
+  }
+};
+
+  // Navigate within dashboard using hash (matches sidebar pattern)
+  if (item.type === 'patient') {
+    navigate(role === 'doctor' ? '/doctor#patients' : '/patient#locker');
+  } else if (item.type === 'record') {
+    navigate(role === 'doctor' ? '/doctor#records' : '/patient#locker');
+  }
+};  
 
   const clearSearch = () => {
     setQuery('');
