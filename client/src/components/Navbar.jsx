@@ -151,14 +151,6 @@ const handleSelect = (item) => {
 
 
 
-  // Navigate within dashboard using hash (matches sidebar pattern)
-  if (item.type === 'patient') {
-    navigate(role === 'doctor' ? '/doctor#patients' : '/patient#locker');
-  } else if (item.type === 'record') {
-    navigate(role === 'doctor' ? '/doctor#records' : '/patient#locker');
-  }
-};  
-
   const clearSearch = () => {
     setQuery('');
     setSuggestions([]);
