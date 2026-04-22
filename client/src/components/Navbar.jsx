@@ -8,7 +8,7 @@ import {
 import { useState, useEffect } from 'react';
 import ECGLine from './ECGLine';
 
-export default function Navbar({ role, onMenuToggle }) {
+export default function Navbar({ role }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
@@ -51,7 +51,7 @@ export default function Navbar({ role, onMenuToggle }) {
       transition={{ duration: 0.5 }}
       style={{
         position: 'fixed',
-        top: 0, left: 0, right: 0,
+        top: 0, left: 260, right: 0,
         height: 68,
         background: 'rgba(6, 13, 28, 0.9)',
         backdropFilter: 'blur(20px)',
