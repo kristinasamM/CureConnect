@@ -6,15 +6,16 @@ import Navbar from '../components/Navbar';
 import ECGLine from '../components/ECGLine';
 import {
   Users, Calendar, ClipboardList, BarChart2, Brain,
-  Plus, Search, Clock, FileText,
-  Stethoscope, Activity, Pill, Edit3,
-  Send, Star, Key, CheckCircle2, AlertCircle,
-  Eye, Trash2, ChevronDown
+  Plus, Search, ChevronRight, Clock, FileText,
+  TrendingUp, Stethoscope, Activity, Pill, Edit3,
+  Send, Zap, Star, Key, CheckCircle2, AlertCircle,
+  Eye, X, Trash2, User, ChevronDown
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
 } from 'recharts';
 
+// ─── AI Diagnosis Suggestions (mock) ────────────────────────────────────────
 const aiSuggestions = [
   { urgency: 'high', icon: '⚠️', patient: 'Rajan Mehta', suggestion: 'BP consistently elevated. Consider adjusting Lisinopril dosage to 15mg.' },
   { urgency: 'low', icon: '✅', patient: 'Aisha Sharma', suggestion: 'HbA1c trending down. Continue current Metformin regimen. Next lab in 3 months.' },
@@ -38,9 +39,16 @@ const appointmentsToday = [
   { time: '3:30 PM', patient: 'New Patient', type: 'Initial Visit', duration: 60, status: 'upcoming' },
 ];
 
+// ─── WidgetCard ────────────────────────────────────────────────────────────
 const WidgetCard = ({ children, title, icon: Icon, color = '#8b5cf6', action, style = {} }) => (
-  <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="glass-card" style={{ padding: 24, ...style }}>
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 8 }}>
+  <motion.div
+    initial={{ opacity: 0, y: 30 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5 }}
+    className="glass-card"
+    style={{ padding: 24, ...style }}
+  >
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{ width: 34, height: 34, background: `${color}18`, border: `1px solid ${color}30`, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Icon size={16} color={color} />
@@ -57,6 +65,7 @@ const WidgetCard = ({ children, title, icon: Icon, color = '#8b5cf6', action, st
   </motion.div>
 );
 
+// ─── Prescription Pad ────────────────────────────────────────────────────────
 function PrescriptionPad({ patient, patientId, doctorName, onClose }) {
   const [meds, setMeds] = useState([{ name: '', dose: '', frequency: '', duration: '' }]);
   const [diagnosis, setDiagnosis] = useState('');
@@ -66,11 +75,24 @@ function PrescriptionPad({ patient, patientId, doctorName, onClose }) {
   const addMed = () => setMeds(m => [...m, { name: '', dose: '', frequency: '', duration: '' }]);
 
   const handleSend = () => {
-    if (patientId) {
-      const key = `cc_prescriptions_${patientId}`;
-      const existing = JSON.parse(localStorage.getItem(key) || '[]');
-      const newRx = { id: Date.now(), doctorName: doctorName || 'Your Doctor', diagnosis, medications: meds.filter(m => m.name), notes, sentAt: new Date().toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }), read: false };
-      localStorage.setItem(key, JSON.stringify([...existing, newRx]));
+    // Save prescription to patient's notification store
+    if (patient) {
+      // Find patient ID from my patients list (passed via patientId prop)
+      const targetPatientId = patientId || null;
+      if (targetPatientId) {
+        const key = `cc_prescriptions_${targetPatientId}`;
+        const existing = JSON.parse(localStorage.getItem(key) || '[]');
+        const newRx = {
+          id: Date.now(),
+          doctorName: doctorName || 'Your Doctor',
+          diagnosis,
+          medications: meds.filter(m => m.name),
+          notes,
+          sentAt: new Date().toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+          read: false,
+        };
+        localStorage.setItem(key, JSON.stringify([...existing, newRx]));
+      }
     }
     setSent(true);
     setTimeout(() => onClose(), 1500);
@@ -101,7 +123,9 @@ function PrescriptionPad({ patient, patientId, doctorName, onClose }) {
           </div>
         </div>
       ))}
-      <button onClick={addMed} className="btn-ghost" style={{ width: '100%', justifyContent: 'center', padding: '9px', borderStyle: 'dashed' }}><Plus size={14} /> Add Medication</button>
+      <button onClick={addMed} className="btn-ghost" style={{ width: '100%', justifyContent: 'center', padding: '9px', borderStyle: 'dashed' }}>
+        <Plus size={14} /> Add Medication
+      </button>
       <textarea className="input-glass" placeholder="Additional notes..." value={notes} onChange={e => setNotes(e.target.value)} style={{ minHeight: 60, resize: 'vertical', fontFamily: 'Outfit, sans-serif' }} />
       <div style={{ display: 'flex', gap: 10 }}>
         <button onClick={onClose} className="btn-ghost" style={{ flex: 1, justifyContent: 'center' }}>Cancel</button>
@@ -113,17 +137,22 @@ function PrescriptionPad({ patient, patientId, doctorName, onClose }) {
   );
 }
 
+// ─── Document Viewer Modal ───────────────────────────────────────────────────
 function PatientDocuments({ patient, onClose }) {
   const docs = patient?.docs || [];
+
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
           <h3 style={{ fontSize: 18, fontWeight: 800 }}>Documents — {patient.name}</h3>
-          <p style={{ fontSize: 12, color: 'rgba(240,244,255,0.4)', marginTop: 4, fontFamily: 'JetBrains Mono, monospace' }}>Access granted via code · {docs.length} file(s)</p>
+          <p style={{ fontSize: 12, color: 'rgba(240,244,255,0.4)', marginTop: 4, fontFamily: 'JetBrains Mono, monospace' }}>
+            Access granted via code · {docs.length} file(s)
+          </p>
         </div>
         <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(240,244,255,0.4)', fontSize: 20 }}>✕</button>
       </div>
+
       {docs.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '40px 20px' }}>
           <FileText size={40} style={{ color: 'rgba(240,244,255,0.2)', marginBottom: 12 }} />
@@ -133,13 +162,22 @@ function PatientDocuments({ patient, onClose }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {docs.map((doc, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px', background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.15)', borderRadius: 12 }}>
-              <span style={{ fontSize: 28, flexShrink: 0 }}>{doc.category === 'PDF' ? '📄' : doc.category === 'Image' ? '🖼️' : '📋'}</span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.name}</p>
+              <span style={{ fontSize: 28, flexShrink: 0 }}>
+                {doc.category === 'PDF' ? '📄' : doc.category === 'Image' ? '🖼️' : '📋'}
+              </span>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 14, fontWeight: 600 }}>{doc.name}</p>
                 <p style={{ fontSize: 11, color: 'rgba(240,244,255,0.4)', marginTop: 2 }}>{doc.date} · {doc.size}</p>
               </div>
-              <button onClick={() => { if (doc.data) { const win = window.open(); win.document.write(`<iframe src="${doc.data}" style="width:100%;height:100vh;border:none;"></iframe>`); } }}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.25)', borderRadius: 8, color: '#8b5cf6', fontSize: 12, cursor: 'pointer', fontFamily: 'Outfit, sans-serif', fontWeight: 600, flexShrink: 0 }}>
+              <button
+                onClick={() => {
+                  if (doc.data) {
+                    const win = window.open();
+                    win.document.write(`<iframe src="${doc.data}" style="width:100%;height:100vh;border:none;"></iframe>`);
+                  }
+                }}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.25)', borderRadius: 8, color: '#8b5cf6', fontSize: 12, cursor: 'pointer', fontFamily: 'Outfit, sans-serif', fontWeight: 600 }}
+              >
                 <Eye size={13} /> View
               </button>
             </div>
@@ -150,29 +188,31 @@ function PatientDocuments({ patient, onClose }) {
   );
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
 export default function DoctorDashboard() {
   const { user } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
-  useEffect(() => {
-    const h = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', h);
-    return () => window.removeEventListener('resize', h);
-  }, []);
-
+  // My patients (added via access code)
   const [myPatients, setMyPatients] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Mobile sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Access code entry
   const [codeInput, setCodeInput] = useState('');
   const [codeError, setCodeError] = useState('');
   const [codeSuccess, setCodeSuccess] = useState('');
   const [addingPatient, setAddingPatient] = useState(false);
+
+  // Modals
   const [showPrescPad, setShowPrescPad] = useState(false);
   const [prescPatient, setPrescPatient] = useState('');
   const [prescPatientId, setPrescPatientId] = useState('');
   const [viewingPatient, setViewingPatient] = useState(null);
   const [expandedPatient, setExpandedPatient] = useState(null);
 
+  // Load my patients from localStorage
   useEffect(() => {
     const doctorId = user?._id || 'demo_doctor';
     const stored = localStorage.getItem(`cc_doctor_patients_${doctorId}`);
@@ -185,30 +225,64 @@ export default function DoctorDashboard() {
     setMyPatients(list);
   };
 
+  // Add patient via access code
   const handleAddPatient = () => {
-    setCodeError(''); setCodeSuccess('');
+    setCodeError('');
+    setCodeSuccess('');
     const code = codeInput.trim().toUpperCase();
     if (code.length < 6) { setCodeError('Please enter a valid access code.'); return; }
+
     setAddingPatient(true);
     setTimeout(() => {
+      // Look up code in localStorage codemap
       const codemap = JSON.parse(localStorage.getItem('cc_codemap') || '{}');
       const patientId = codemap[code];
-      if (!patientId) { setCodeError('Invalid or expired access code. Ask the patient to share their current code.'); setAddingPatient(false); return; }
-      if (myPatients.find(p => p.patientId === patientId)) { setCodeError('This patient is already in your list.'); setAddingPatient(false); return; }
+
+      if (!patientId) {
+        setCodeError('Invalid or expired access code. Ask the patient to share their current code.');
+        setAddingPatient(false);
+        return;
+      }
+
+      // Check if already added
+      if (myPatients.find(p => p.patientId === patientId)) {
+        setCodeError('This patient is already in your list.');
+        setAddingPatient(false);
+        return;
+      }
+
+      // Get patient data from localStorage
       const allUsers = JSON.parse(localStorage.getItem('cc_demo_users') || '[]');
       const patientUser = allUsers.find(u => u._id === patientId);
+
+      // Get patient documents
       const docs = JSON.parse(localStorage.getItem(`cc_docs_${patientId}`) || '[]');
-      const newPatient = { patientId, name: patientUser?.name || 'Patient', bloodGroup: patientUser?.bloodGroup || '—', gender: patientUser?.gender || '—', addedAt: new Date().toLocaleDateString('en-IN'), docs, accessCode: code };
+
+      const newPatient = {
+        patientId,
+        name: patientUser?.name || 'Patient',
+        bloodGroup: patientUser?.bloodGroup || '—',
+        gender: patientUser?.gender || '—',
+        addedAt: new Date().toLocaleDateString('en-IN'),
+        docs,
+        accessCode: code,
+      };
+
       const updated = [...myPatients, newPatient];
       savePatients(updated);
       setCodeInput('');
-      setCodeSuccess(`✅ ${newPatient.name} added to your patients!`);
+      setCodeSuccess(`✅ ${newPatient.name} added to your patients! You can now view their documents.`);
       setAddingPatient(false);
     }, 800);
   };
 
-  const removePatient = (patientId) => savePatients(myPatients.filter(p => p.patientId !== patientId));
-  const filtered = myPatients.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const removePatient = (patientId) => {
+    savePatients(myPatients.filter(p => p.patientId !== patientId));
+  };
+
+  const filtered = myPatients.filter(p =>
+    p.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const stats = [
     { label: 'My Patients', value: String(myPatients.length), icon: Users, color: '#8b5cf6', delta: 'via access codes' },
@@ -217,25 +291,17 @@ export default function DoctorDashboard() {
     { label: 'Avg. Rating', value: '4.9', icon: Star, color: '#f59e0b', delta: '★ from patients' },
   ];
 
-  const col = (desktop, mobile = '1fr') => isMobile ? mobile : desktop;
-
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#030712' }}>
+    <div className="dashboard-layout">
       <div className="bg-grid" />
-      <Sidebar role="doctor" isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <Navbar role="doctor" onMenuToggle={() => setSidebarOpen(v => !v)} />
+      <Sidebar role="doctor" mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Navbar role="doctor" onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
 
-      <main style={{
-        flex: 1,
-        marginLeft: isMobile ? 0 : 260,
-        marginTop: 68,
-        padding: isMobile ? '20px 14px 80px' : '32px 32px 80px',
-        position: 'relative', zIndex: 1,
-      }}>
+      <main className="dashboard-main">
 
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, letterSpacing: '-0.5px' }}>
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 28 }}>
+          <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.5px' }}>
             Dr. <span style={{ background: 'linear-gradient(135deg,#8b5cf6,#ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               {user?.name?.split(' ').slice(1).join(' ') || user?.name || 'Doctor'}
             </span>
@@ -247,52 +313,81 @@ export default function DoctorDashboard() {
         </motion.div>
 
         {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: col('repeat(4,1fr)', 'repeat(2,1fr)'), gap: isMobile ? 10 : 16, marginBottom: isMobile ? 16 : 24 }}>
+        <div className="dashboard-grid-4">
           {stats.map((s, i) => (
-            <motion.div key={s.label} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="glass-card" style={{ padding: isMobile ? '14px' : '20px 22px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 10, background: `${s.color}18`, border: `1px solid ${s.color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <s.icon size={15} color={s.color} />
+            <motion.div key={s.label} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="glass-card" style={{ padding: '20px 22px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: `${s.color}18`, border: `1px solid ${s.color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <s.icon size={17} color={s.color} />
                 </div>
-                <span style={{ fontSize: isMobile ? 20 : 26, fontWeight: 900, color: s.color }}>{s.value}</span>
+                <span style={{ fontSize: 26, fontWeight: 900, color: s.color }}>{s.value}</span>
               </div>
-              <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 2 }}>{s.label}</p>
-              <p style={{ fontSize: 10, color: 'rgba(240,244,255,0.35)', fontFamily: 'JetBrains Mono, monospace' }}>{s.delta}</p>
+              <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 3 }}>{s.label}</p>
+              <p style={{ fontSize: 11, color: 'rgba(240,244,255,0.35)', fontFamily: 'JetBrains Mono, monospace' }}>{s.delta}</p>
             </motion.div>
           ))}
         </div>
 
-        {/* Row 1: Add Patient + My Patients */}
-        <div style={{ display: 'grid', gridTemplateColumns: col('1fr 2fr'), gap: 16, marginBottom: 16 }}>
+        {/* ── Row 1: Add Patient + My Patients ── */}
+        <div id="patients" style={{position:"absolute",marginTop:-80}} />
+        <div className="dashboard-grid-2">
+
+          {/* Add Patient via Code */}
           <WidgetCard title="Add Patient via Code" icon={Key} color="#00d4ff">
             <p style={{ fontSize: 13, color: 'rgba(240,244,255,0.5)', lineHeight: 1.6, marginBottom: 18 }}>
-              Ask your patient to share their 8-digit access code from their dashboard.
+              Ask your patient to share their 8-digit access code from their dashboard. Enter it below to get access to their health documents.
             </p>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <input className="input-glass" placeholder="Enter patient access code..." value={codeInput}
+              <input
+                className="input-glass"
+                placeholder="Enter patient access code..."
+                value={codeInput}
                 onChange={e => { setCodeInput(e.target.value.toUpperCase()); setCodeError(''); setCodeSuccess(''); }}
-                onKeyDown={e => e.key === 'Enter' && handleAddPatient()} maxLength={10}
-                style={{ letterSpacing: '4px', fontSize: 16, fontWeight: 700, fontFamily: 'JetBrains Mono, monospace', textAlign: 'center' }} />
-              <button onClick={handleAddPatient} disabled={addingPatient}
-                style={{ padding: '12px', background: 'linear-gradient(135deg,#00d4ff,#00ff88)', border: 'none', borderRadius: 12, color: '#000', fontWeight: 800, fontSize: 15, cursor: addingPatient ? 'not-allowed' : 'pointer', fontFamily: 'Outfit, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: addingPatient ? 0.7 : 1 }}>
-                {addingPatient ? (<><div style={{ width: 16, height: 16, border: '2px solid rgba(0,0,0,0.3)', borderTop: '2px solid #000', borderRadius: '50%', animation: 'spin-slow 0.8s linear infinite' }} /> Verifying...</>) : (<><Plus size={16} /> Add Patient</>)}
+                onKeyDown={e => e.key === 'Enter' && handleAddPatient()}
+                maxLength={10}
+                style={{ letterSpacing: '4px', fontSize: 16, fontWeight: 700, fontFamily: 'JetBrains Mono, monospace', textAlign: 'center' }}
+              />
+              <button
+                onClick={handleAddPatient}
+                disabled={addingPatient}
+                style={{ padding: '12px', background: 'linear-gradient(135deg,#00d4ff,#00ff88)', border: 'none', borderRadius: 12, color: '#000', fontWeight: 800, fontSize: 15, cursor: addingPatient ? 'not-allowed' : 'pointer', fontFamily: 'Outfit, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: addingPatient ? 0.7 : 1 }}
+              >
+                {addingPatient ? (
+                  <><div style={{ width: 16, height: 16, border: '2px solid rgba(0,0,0,0.3)', borderTop: '2px solid #000', borderRadius: '50%', animation: 'spin-slow 0.8s linear infinite' }} /> Verifying...</>
+                ) : (
+                  <><Plus size={16} /> Add Patient</>
+                )}
               </button>
             </div>
+
             <AnimatePresence>
-              {codeError && (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 14px', background: 'rgba(255,68,68,0.1)', border: '1px solid rgba(255,68,68,0.2)', borderRadius: 10, color: '#ff6b6b', fontSize: 13, marginTop: 10, lineHeight: 1.5 }}><AlertCircle size={15} style={{ marginTop: 1, flexShrink: 0 }} /> {codeError}</motion.div>)}
-              {codeSuccess && (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: 'rgba(0,255,136,0.1)', border: '1px solid rgba(0,255,136,0.2)', borderRadius: 10, color: '#00ff88', fontSize: 13, marginTop: 10 }}><CheckCircle2 size={15} /> {codeSuccess}</motion.div>)}
+              {codeError && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 14px', background: 'rgba(255,68,68,0.1)', border: '1px solid rgba(255,68,68,0.2)', borderRadius: 10, color: '#ff6b6b', fontSize: 13, marginTop: 10, lineHeight: 1.5 }}>
+                  <AlertCircle size={15} style={{ marginTop: 1, flexShrink: 0 }} /> {codeError}
+                </motion.div>
+              )}
+              {codeSuccess && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: 'rgba(0,255,136,0.1)', border: '1px solid rgba(0,255,136,0.2)', borderRadius: 10, color: '#00ff88', fontSize: 13, marginTop: 10 }}>
+                  <CheckCircle2 size={15} /> {codeSuccess}
+                </motion.div>
+              )}
             </AnimatePresence>
+
             <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(0,212,255,0.06)', border: '1px solid rgba(0,212,255,0.12)', borderRadius: 10 }}>
-              <p style={{ fontSize: 12, color: 'rgba(0,212,255,0.7)' }}>ℹ️ Access is controlled by the patient. They can revoke it anytime.</p>
+              <p style={{ fontSize: 12, color: 'rgba(0,212,255,0.7)' }}>
+                ℹ️ Access is controlled by the patient. They can revoke it anytime by regenerating their code.
+              </p>
             </div>
           </WidgetCard>
 
+          {/* My Patients list */}
           <WidgetCard title="My Patients" icon={Users} color="#8b5cf6">
             {myPatients.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px 20px' }}>
                 <Users size={40} style={{ color: 'rgba(240,244,255,0.15)', marginBottom: 14 }} />
                 <p style={{ color: 'rgba(240,244,255,0.4)', fontSize: 14, marginBottom: 8 }}>No patients added yet</p>
-                <p style={{ color: 'rgba(240,244,255,0.25)', fontSize: 13 }}>Ask a patient to share their access code, then enter it on the {isMobile ? 'card above' : 'left'}</p>
+                <p style={{ color: 'rgba(240,244,255,0.25)', fontSize: 13 }}>Ask a patient to share their access code, then enter it on the left</p>
               </div>
             ) : (
               <>
@@ -304,24 +399,45 @@ export default function DoctorDashboard() {
                   {filtered.map((p, i) => (
                     <motion.div key={p.patientId} initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
                       style={{ background: expandedPatient === p.patientId ? 'rgba(139,92,246,0.1)' : 'rgba(255,255,255,0.03)', border: `1px solid ${expandedPatient === p.patientId ? 'rgba(139,92,246,0.25)' : 'rgba(255,255,255,0.06)'}`, borderRadius: 12, overflow: 'hidden' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', cursor: 'pointer' }} onClick={() => setExpandedPatient(expandedPatient === p.patientId ? null : p.patientId)}>
-                        <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg,#8b5cf6,#ec4899)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, fontWeight: 700, color: '#fff' }}>{p.name[0]}</div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: 14, fontWeight: 700 }}>{p.name}</p>
-                          <p style={{ fontSize: 11, color: 'rgba(240,244,255,0.4)', marginTop: 2, fontFamily: 'JetBrains Mono, monospace' }}>Added {p.addedAt} · {p.docs?.length || 0} doc(s)</p>
+                      <div
+                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', cursor: 'pointer' }}
+                        onClick={() => setExpandedPatient(expandedPatient === p.patientId ? null : p.patientId)}
+                      >
+                        <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg,#8b5cf6,#ec4899)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, fontWeight: 700, color: '#fff' }}>
+                          {p.name[0]}
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                        <div style={{ flex: 1 }}>
+                          <p style={{ fontSize: 14, fontWeight: 700 }}>{p.name}</p>
+                          <p style={{ fontSize: 11, color: 'rgba(240,244,255,0.4)', marginTop: 2, fontFamily: 'JetBrains Mono, monospace' }}>
+                            Added {p.addedAt} · {p.docs?.length || 0} doc(s)
+                          </p>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span className="badge badge-green">{p.docs?.length || 0} docs</span>
                           <ChevronDown size={15} style={{ color: 'rgba(240,244,255,0.3)', transform: expandedPatient === p.patientId ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
                         </div>
                       </div>
+
                       <AnimatePresence>
                         {expandedPatient === p.patientId && (
                           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden', borderTop: '1px solid rgba(139,92,246,0.1)' }}>
-                            <div style={{ padding: '12px 16px', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                              <button onClick={() => setViewingPatient(p)} style={{ flex: 1, minWidth: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '9px', background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: 10, color: '#00d4ff', fontSize: 13, cursor: 'pointer', fontFamily: 'Outfit, sans-serif', fontWeight: 600 }}><Eye size={13} /> View Docs</button>
-                              <button onClick={() => { setPrescPatient(p.name); setPrescPatientId(p.patientId); setShowPrescPad(true); }} style={{ flex: 1, minWidth: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '9px', background: 'linear-gradient(135deg,#8b5cf6,#ec4899)', border: 'none', borderRadius: 10, color: '#fff', fontSize: 13, cursor: 'pointer', fontFamily: 'Outfit, sans-serif', fontWeight: 700 }}><Edit3 size={13} /> Prescribe</button>
-                              <button onClick={() => removePatient(p.patientId)} style={{ padding: '9px 12px', background: 'rgba(255,68,68,0.08)', border: '1px solid rgba(255,68,68,0.15)', borderRadius: 10, color: '#ff6b6b', cursor: 'pointer' }}><Trash2 size={14} /></button>
+                            <div style={{ padding: '12px 16px', display: 'flex', gap: 8 }}>
+                              <button
+                                onClick={() => setViewingPatient(p)}
+                                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '9px', background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: 10, color: '#00d4ff', fontSize: 13, cursor: 'pointer', fontFamily: 'Outfit, sans-serif', fontWeight: 600 }}>
+                                <Eye size={13} /> View Documents
+                              </button>
+                              <button
+                                onClick={() => { setPrescPatient(p.name); setPrescPatientId(p.patientId); setShowPrescPad(true); }}
+                                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '9px', background: 'linear-gradient(135deg,#8b5cf6,#ec4899)', border: 'none', borderRadius: 10, color: '#fff', fontSize: 13, cursor: 'pointer', fontFamily: 'Outfit, sans-serif', fontWeight: 700 }}>
+                                <Edit3 size={13} /> Prescribe
+                              </button>
+                              <button
+                                onClick={() => removePatient(p.patientId)}
+                                style={{ padding: '9px 12px', background: 'rgba(255,68,68,0.08)', border: '1px solid rgba(255,68,68,0.15)', borderRadius: 10, color: '#ff6b6b', cursor: 'pointer' }}
+                                title="Remove patient">
+                                <Trash2 size={14} />
+                              </button>
                             </div>
                           </motion.div>
                         )}
@@ -334,18 +450,19 @@ export default function DoctorDashboard() {
           </WidgetCard>
         </div>
 
-        {/* Row 2: Schedule + Analytics */}
-        <div style={{ display: 'grid', gridTemplateColumns: col('1fr 2fr'), gap: 16, marginBottom: 16 }}>
+        {/* ── Row 2: Schedule + Analytics ── */}
+        <div id="analytics" style={{position:"absolute",marginTop:-80}} />
+        <div className="dashboard-grid-2">
           <WidgetCard title="Today's Schedule" icon={Calendar} color="#00d4ff">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {appointmentsToday.map((appt, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px', background: appt.status === 'upcoming' ? 'rgba(0,212,255,0.06)' : 'rgba(255,255,255,0.03)', border: `1px solid ${appt.status === 'upcoming' ? 'rgba(0,212,255,0.15)' : 'rgba(255,255,255,0.05)'}`, borderRadius: 10 }}>
                   <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: appt.status === 'completed' ? '#00ff88' : '#00d4ff', boxShadow: appt.status === 'upcoming' ? '0 0 8px rgba(0,212,255,0.6)' : 'none' }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ flex: 1 }}>
                     <p style={{ fontSize: 13, fontWeight: 600 }}>{appt.patient}</p>
                     <p style={{ fontSize: 11, color: 'rgba(240,244,255,0.4)' }}>{appt.type} · {appt.duration}min</p>
                   </div>
-                  <p style={{ fontSize: 12, fontFamily: 'JetBrains Mono, monospace', color: appt.status === 'upcoming' ? '#00d4ff' : 'rgba(240,244,255,0.4)', flexShrink: 0 }}>{appt.time}</p>
+                  <p style={{ fontSize: 12, fontFamily: 'JetBrains Mono, monospace', color: appt.status === 'upcoming' ? '#00d4ff' : 'rgba(240,244,255,0.4)' }}>{appt.time}</p>
                 </div>
               ))}
             </div>
@@ -365,9 +482,10 @@ export default function DoctorDashboard() {
           </WidgetCard>
         </div>
 
-        {/* Row 3: AI Suggestions */}
+        {/* ── Row 3: AI Suggestions ── */}
+        <div id="ai" style={{position:"absolute",marginTop:-80}} />
         <WidgetCard title="AI Diagnosis Alerts" icon={Brain} color="#8b5cf6">
-          <div style={{ display: 'grid', gridTemplateColumns: col('repeat(3,1fr)'), gap: 14 }}>
+          <div className="ai-suggestions-grid">
             {aiSuggestions.map((s, i) => (
               <motion.div key={i} whileHover={{ y: -2 }} style={{ padding: '16px', background: s.urgency === 'high' ? 'rgba(255,68,68,0.08)' : s.urgency === 'medium' ? 'rgba(245,158,11,0.08)' : 'rgba(0,255,136,0.06)', border: `1px solid ${s.urgency === 'high' ? 'rgba(255,68,68,0.2)' : s.urgency === 'medium' ? 'rgba(245,158,11,0.2)' : 'rgba(0,255,136,0.15)'}`, borderRadius: 12 }}>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
@@ -380,27 +498,33 @@ export default function DoctorDashboard() {
           </div>
         </WidgetCard>
 
-        {/* Prescription Modal */}
+        {/* ── Prescription Modal ── */}
         {showPrescPad && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', background: 'rgba(3,7,18,0.85)', backdropFilter: 'blur(10px)', zIndex: 500 }} onClick={e => { if (e.target === e.currentTarget) setShowPrescPad(false); }}>
-            <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ width: '100%', maxWidth: isMobile ? '100%' : 520, maxHeight: '90vh', overflowY: 'auto', padding: isMobile ? '24px 16px' : 28, border: '1px solid rgba(139,92,246,0.3)', boxShadow: '0 0 80px rgba(139,92,246,0.2)', borderRadius: isMobile ? '20px 20px 0 0' : 16 }}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(3,7,18,0.85)', backdropFilter: 'blur(10px)', zIndex: 500 }} onClick={e => { if (e.target === e.currentTarget) setShowPrescPad(false); }}>
+            <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ width: '100%', maxWidth: 520, maxHeight: '88vh', overflowY: 'auto', padding: 28, border: '1px solid rgba(139,92,246,0.3)', boxShadow: '0 16px 40px rgba(139,92,246,0.12)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
                 <h3 style={{ fontSize: 20, fontWeight: 800 }}>Digital Prescription Pad</h3>
                 <button onClick={() => setShowPrescPad(false)} style={{ background: 'none', border: 'none', color: 'rgba(240,244,255,0.4)', cursor: 'pointer', fontSize: 20 }}>✕</button>
               </div>
-              <PrescriptionPad patient={prescPatient} patientId={prescPatientId} doctorName={user?.name} onClose={() => setShowPrescPad(false)} />
+              <PrescriptionPad
+                patient={prescPatient}
+                patientId={prescPatientId}
+                doctorName={user?.name}
+                onClose={() => setShowPrescPad(false)}
+              />
             </motion.div>
           </motion.div>
         )}
 
-        {/* Documents Modal */}
+        {/* ── Patient Documents Modal ── */}
         {viewingPatient && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', background: 'rgba(3,7,18,0.85)', backdropFilter: 'blur(10px)', zIndex: 500 }} onClick={e => { if (e.target === e.currentTarget) setViewingPatient(null); }}>
-            <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ width: '100%', maxWidth: isMobile ? '100%' : 560, maxHeight: '90vh', overflowY: 'auto', padding: isMobile ? '24px 16px' : 28, border: '1px solid rgba(0,212,255,0.2)', boxShadow: '0 0 80px rgba(0,212,255,0.1)', borderRadius: isMobile ? '20px 20px 0 0' : 16 }}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(3,7,18,0.85)', backdropFilter: 'blur(10px)', zIndex: 500 }} onClick={e => { if (e.target === e.currentTarget) setViewingPatient(null); }}>
+            <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ width: '100%', maxWidth: 560, maxHeight: '88vh', overflowY: 'auto', padding: 28, border: '1px solid rgba(0,212,255,0.2)', boxShadow: '0 16px 40px rgba(0,212,255,0.08)' }}>
               <PatientDocuments patient={viewingPatient} onClose={() => setViewingPatient(null)} />
             </motion.div>
           </motion.div>
         )}
+
       </main>
     </div>
   );

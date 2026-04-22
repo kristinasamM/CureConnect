@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   Heart, Home, FileText, Calendar, Pill,
   MessageCircle, AlertTriangle, Users, BarChart2,
-  ClipboardList, Activity, ChevronLeft, X
+  ClipboardList, Activity, Stethoscope, ChevronLeft, X
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -27,51 +27,53 @@ const doctorNav = [
   { icon: MessageCircle, label: 'AI Diagnosis', path: '/doctor#ai', section: 'tools' },
 ];
 
-export default function Sidebar({ role, isOpen, onClose }) {
+export default function Sidebar({ role, mobileOpen, onClose }) {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
+  const [isMobile, setIsMobile] = useState(false);
   const navItems = role === 'doctor' ? doctorNav : patientNav;
   const accentColor = role === 'doctor' ? '#8b5cf6' : '#00d4ff';
   const gradientStart = role === 'doctor' ? '#8b5cf6' : '#00d4ff';
   const gradientEnd = role === 'doctor' ? '#ec4899' : '#00ff88';
+
   const sections = [...new Set(navItems.map(n => n.section))];
 
-  // On mobile never collapse — always full width drawer
-  const effectiveCollapsed = isMobile ? false : collapsed;
+  // Detect mobile
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  // Close sidebar on navigation (mobile)
+  useEffect(() => {
+    if (isMobile && mobileOpen) onClose?.();
+  }, [location.pathname, location.hash]);
+
+  const sidebarWidth = collapsed && !isMobile ? 72 : 260;
 
   return (
     <>
-      {/* Mobile backdrop */}
-      {isMobile && isOpen && (
+      {/* Mobile overlay backdrop */}
+      {isMobile && mobileOpen && (
         <div
+          className="sidebar-overlay visible"
           onClick={onClose}
-          style={{
-            position: 'fixed', inset: 0,
-            background: 'rgba(3,7,18,0.75)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 199,
-          }}
         />
       )}
 
       <motion.aside
+        initial={isMobile ? { x: -280 } : { x: -280 }}
         animate={{
-          x: isMobile ? (isOpen ? 0 : -280) : 0,
-          width: effectiveCollapsed ? 72 : 260,
+          x: isMobile ? (mobileOpen ? 0 : -280) : 0,
+          width: sidebarWidth,
         }}
-        initial={{ x: isMobile ? -280 : 0 }}
-        transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
         style={{
           position: 'fixed',
-          top: 0, left: 0,
+          top: 0,
+          left: 0,
           height: '100vh',
           background: 'rgba(6,13,28,0.98)',
           borderRight: '1px solid rgba(255,255,255,0.06)',
@@ -83,28 +85,33 @@ export default function Sidebar({ role, isOpen, onClose }) {
       >
         {/* Logo */}
         <div style={{
-          padding: effectiveCollapsed ? '24px 0' : '24px 20px',
+          padding: collapsed && !isMobile ? '24px 0' : '24px 20px',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: effectiveCollapsed ? 'center' : 'space-between',
+          justifyContent: collapsed && !isMobile ? 'center' : 'space-between',
           minHeight: 80,
         }}>
-          {!effectiveCollapsed && (
+          {(!collapsed || isMobile) && (
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 2 }}>
                 <div style={{
-                  width: 32, height: 32,
+                  width: 32,
+                  height: 32,
                   background: `linear-gradient(135deg, ${gradientStart}, ${gradientEnd})`,
                   borderRadius: 10,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}>
                   <Heart size={16} color="#000" fill="#000" />
                 </div>
                 <span style={{
-                  fontSize: 18, fontWeight: 800,
+                  fontSize: 18,
+                  fontWeight: 800,
                   background: `linear-gradient(135deg, ${gradientStart}, ${gradientEnd})`,
-                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
                   letterSpacing: '-0.5px',
                 }}>CureConnect</span>
               </div>
@@ -113,48 +120,76 @@ export default function Sidebar({ role, isOpen, onClose }) {
               </p>
             </div>
           )}
-          {effectiveCollapsed && (
+          {collapsed && !isMobile && (
             <div style={{
-              width: 36, height: 36,
+              width: 36,
+              height: 36,
               background: `linear-gradient(135deg, ${gradientStart}, ${gradientEnd})`,
               borderRadius: 10,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}>
               <Heart size={18} color="#000" fill="#000" />
             </div>
           )}
 
-          {/* Mobile: X close | Desktop: collapse toggle */}
+          {/* Close button for mobile, Collapse button for desktop */}
           {isMobile ? (
-            <button onClick={onClose} style={{
-              background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 8, width: 32, height: 32,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', color: 'var(--text-muted)', flexShrink: 0,
-            }}>
-              <X size={15} />
+            <button
+              onClick={onClose}
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 8,
+                width: 32,
+                height: 32,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'var(--text-muted)',
+                flexShrink: 0,
+              }}
+            >
+              <X size={16} />
             </button>
           ) : (
-            <button onClick={() => setCollapsed(!collapsed)} style={{
-              background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 8, width: 28, height: 28,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', color: 'var(--text-muted)', transition: 'all 0.2s', flexShrink: 0,
-            }}>
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 8,
+                width: 28,
+                height: 28,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'var(--text-muted)',
+                transition: 'all 0.2s',
+                flexShrink: 0,
+              }}
+            >
               <ChevronLeft size={14} style={{ transform: collapsed ? 'rotate(180deg)' : undefined, transition: '0.3s' }} />
             </button>
           )}
         </div>
 
         {/* Nav */}
-        <nav style={{ flex: 1, overflowY: 'auto', padding: effectiveCollapsed ? '16px 8px' : '16px 12px' }}>
+        <nav style={{ flex: 1, overflowY: 'auto', padding: collapsed && !isMobile ? '16px 8px' : '16px 12px' }}>
           {sections.map(section => (
             <div key={section} style={{ marginBottom: 8 }}>
-              {!effectiveCollapsed && (
+              {(!collapsed || isMobile) && (
                 <p style={{
-                  fontSize: 10, fontWeight: 600, color: 'rgba(240,244,255,0.3)',
-                  textTransform: 'uppercase', letterSpacing: '1.5px',
-                  padding: '8px 8px 4px', fontFamily: 'JetBrains Mono, monospace',
+                  fontSize: 10,
+                  fontWeight: 600,
+                  color: 'rgba(240,244,255,0.3)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1.5px',
+                  padding: '8px 8px 4px',
+                  fontFamily: 'JetBrains Mono, monospace',
                 }}>
                   {section}
                 </p>
@@ -165,30 +200,47 @@ export default function Sidebar({ role, isOpen, onClose }) {
                   <Link
                     key={item.label}
                     to={item.path}
-                    onClick={isMobile ? onClose : undefined}
+                    onClick={() => { if (isMobile) onClose?.(); }}
                     style={{
-                      display: 'flex', alignItems: 'center', gap: 12,
-                      padding: effectiveCollapsed ? '12px' : '12px 12px',
-                      borderRadius: 10, textDecoration: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: collapsed && !isMobile ? '10px' : '10px 12px',
+                      borderRadius: 10,
+                      textDecoration: 'none',
                       color: active ? accentColor : 'var(--text-secondary)',
                       background: active ? `rgba(${role === 'doctor' ? '139,92,246' : '0,212,255'}, 0.1)` : 'transparent',
                       border: active ? `1px solid rgba(${role === 'doctor' ? '139,92,246' : '0,212,255'}, 0.2)` : '1px solid transparent',
                       transition: 'all 0.2s',
-                      justifyContent: effectiveCollapsed ? 'center' : 'flex-start',
-                      marginBottom: 2, minHeight: 44,
+                      justifyContent: collapsed && !isMobile ? 'center' : 'flex-start',
+                      marginBottom: 2,
+                      minHeight: 42,
                     }}
-                    onMouseEnter={e => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'var(--text-primary)'; } }}
-                    onMouseLeave={e => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; } }}
-                    data-tooltip={effectiveCollapsed ? item.label : undefined}
+                    onMouseEnter={e => {
+                      if (!active) {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                        e.currentTarget.style.color = 'var(--text-primary)';
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (!active) {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = 'var(--text-secondary)';
+                      }
+                    }}
+                    data-tooltip={collapsed && !isMobile ? item.label : undefined}
                   >
                     <item.icon size={18} style={{ flexShrink: 0 }} />
-                    {!effectiveCollapsed && (
+                    {(!collapsed || isMobile) && (
                       <span style={{ fontSize: 14, fontWeight: active ? 600 : 400 }}>{item.label}</span>
                     )}
-                    {active && !effectiveCollapsed && (
+                    {active && (!collapsed || isMobile) && (
                       <div style={{
-                        marginLeft: 'auto', width: 6, height: 6, borderRadius: '50%',
-                        background: accentColor, boxShadow: `0 0 8px ${accentColor}`,
+                        marginLeft: 'auto',
+                        width: 6,
+                        height: 6,
+                        borderRadius: '50%',
+                        background: accentColor,
                       }} />
                     )}
                   </Link>
@@ -199,12 +251,15 @@ export default function Sidebar({ role, isOpen, onClose }) {
         </nav>
 
         {/* Bottom status */}
-        {!effectiveCollapsed && (
-          <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        {(!collapsed || isMobile) && (
+          <div style={{
+            padding: '16px 20px',
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+          }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{
-                width: 8, height: 8, borderRadius: '50%', background: '#00ff88',
-                boxShadow: '0 0 8px rgba(0,255,136,0.6)', animation: 'pulse-glow 2s ease-in-out infinite',
+                width: 8, height: 8, borderRadius: '50%',
+                background: '#00ff88',
               }} />
               <span style={{ fontSize: 12, color: 'rgba(240,244,255,0.4)', fontFamily: 'JetBrains Mono, monospace' }}>
                 System Online
