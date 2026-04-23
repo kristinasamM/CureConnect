@@ -37,12 +37,18 @@ const SPECIALTY_MAP = {
   'joint': { spec: 'Rheumatologist', emoji: '🦴', color: '#f59e0b', desc: 'For joint pain and autoimmune conditions' },
   'arthritis': { spec: 'Rheumatologist', emoji: '🦴', color: '#f59e0b', desc: 'For arthritis and inflammatory disorders' },
   'kidney': { spec: 'Nephrologist', emoji: '🫘', color: '#00ff88', desc: 'For kidney function and care' },
+  'ckd': { spec: 'Nephrologist', emoji: '🫘', color: '#00ff88', desc: 'For chronic kidney disease care' },
   'mental': { spec: 'Psychiatrist', emoji: '🧠', color: '#8b5cf6', desc: 'For mental health and emotional wellbeing' },
   'anxiety': { spec: 'Psychiatrist', emoji: '🧠', color: '#8b5cf6', desc: 'For anxiety, stress and mental health' },
   'depression': { spec: 'Psychiatrist', emoji: '🧠', color: '#8b5cf6', desc: 'For mood disorders and mental health' },
   'bone': { spec: 'Orthopedist', emoji: '🦴', color: '#f59e0b', desc: 'For bone, muscle and skeletal care' },
   'digestive': { spec: 'Gastroenterologist', emoji: '🫃', color: '#00ff88', desc: 'For digestive tract and gut health' },
   'stomach': { spec: 'Gastroenterologist', emoji: '🫃', color: '#00ff88', desc: 'For stomach and digestive concerns' },
+  'uti': { spec: 'Urologist', emoji: '💧', color: '#f59e0b', desc: 'For urinary tract and bladder infections' },
+  'urine': { spec: 'Urologist', emoji: '💧', color: '#f59e0b', desc: 'For urinary and bladder issues' },
+  'fever': { spec: 'General Physician', emoji: '👨‍⚕️', color: '#ec4899', desc: 'For initial consultation of fever and symptoms' },
+  'blood': { spec: 'Hematologist', emoji: '🩸', color: '#ff4444', desc: 'For blood disorders and lab results' },
+  'infection': { spec: 'Infectious Disease Specialist', emoji: '🦠', color: '#00ff88', desc: 'For infectious diseases and pathogens' }
 };
 
 function getSuggestedSpecialties(records, userConditions) {

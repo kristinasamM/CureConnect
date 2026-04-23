@@ -49,17 +49,20 @@ router.get('/', protect, async (req, res) => {
         "color": "A hex color code suitable for the event type (e.g., #00d4ff for checkup, #f59e0b for lab, #8b5cf6 for medication, #00ff88 for procedure, #ec4899 for upload)"
       }]
       
-      IMPORTANT: Return ONLY a raw, unformatted JSON array. Do not use markdown backticks like \`\`\`json. Return just the JSON array literal.
+      Return ONLY a JSON array.
     `;
 
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     const result = await model.generateContent(dataPrompt);
     let text = result.response.text().trim();
     
-    // Aggressive cleanup just in case
-    if (text.startsWith('\`\`\`json')) text = text.substring(7, text.length - 3).trim();
-    else if (text.startsWith('\`\`\`')) text = text.substring(3, text.length - 3).trim();
-
+    // Robust extraction of JSON array using regex
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      throw new Error('Gemini model did not return a valid JSON array format.');
+    }
+    
+    text = jsonMatch[0];
     const timelineData = JSON.parse(text);
     res.json(timelineData);
   } catch (error) {
