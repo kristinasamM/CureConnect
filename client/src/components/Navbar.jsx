@@ -1,9 +1,10 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import {
   Bell, Settings, LogOut, Search,
-  ChevronDown, Pill, X, Clock, User, FileText, Menu, AlertTriangle
+  ChevronDown, Pill, X, Clock, User, FileText, Menu, AlertTriangle, Sun, Moon
 } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import ECGLine from './ECGLine';
@@ -52,6 +53,7 @@ function HighlightText({ text, query }) {
 
 export default function Navbar({ role, onToggleSidebar }) {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showNotifs, setShowNotifs] = useState(false);
@@ -125,27 +127,31 @@ export default function Navbar({ role, onToggleSidebar }) {
     }
   };
 
-  const handleSelect = (item) => {
-    setQuery(item.name);
-    setShowSearch(false);
-    setActiveIndex(-1);
+const handleSelect = (item) => {
+  setQuery(item.name);
+  setShowSearch(false);
+  setActiveIndex(-1);
 
-    const section = item.type === 'patient' ? 'patients' : 'records';
-    const target = role === 'doctor' ? section : 'locker';
+  const section = item.type === 'patient' ? 'patients' : 'records';
+  const target = role === 'doctor' ? section : 'locker';
 
-    // If already on the right page, scroll directly
-    const el = document.getElementById(target);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else {
-      // Navigate first, then scroll after page renders
-      navigate(role === 'doctor' ? `/doctor#${target}` : `/patient#${target}`);
-      setTimeout(() => {
-        const el2 = document.getElementById(target);
-        if (el2) el2.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 300);
-    }
-  };
+  // If already on the right page, scroll directly
+  const el = document.getElementById(target);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    // Navigate first, then scroll after page renders
+    navigate(role === 'doctor' ? `/doctor#${target}` : `/patient#${target}`);
+    setTimeout(() => {
+      const el2 = document.getElementById(target);
+      if (el2) el2.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 300);
+  }
+};
+
+
+
+
 
   const clearSearch = () => {
     setQuery('');
@@ -206,7 +212,7 @@ export default function Navbar({ role, onToggleSidebar }) {
     navigate('/');
   };
 
-  const accentColor = role === 'doctor' ? 'var(--purple)' : 'var(--cyan)';
+  const accentColor = role === 'doctor' ? '#8b5cf6' : '#00d4ff';
 
   return (
     <motion.nav
@@ -220,7 +226,7 @@ export default function Navbar({ role, onToggleSidebar }) {
         left: isMobile ? 0 : 260,
         right: 0,
         height: isMobile ? 56 : 68,
-        background: 'var(--bg-card)',
+        background: 'var(--bg-navbar)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
         borderBottom: '1px solid var(--border-subtle)',
@@ -345,12 +351,12 @@ export default function Navbar({ role, onToggleSidebar }) {
                 right: isMobile ? -12 : 0,
                 width: isMobile ? 'calc(100% + 24px)' : undefined,
                 maxWidth: isMobile ? 'calc(100vw - 24px)' : undefined,
-                background: 'rgba(6, 13, 28, 0.95)',
+                background: 'var(--bg-dropdown)',
                 backdropFilter: 'blur(24px)',
                 WebkitBackdropFilter: 'blur(24px)',
-                border: '1px solid rgba(255,255,255,0.1)',
+                border: '1px solid var(--border-glass)',
                 borderRadius: 14,
-                boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 30px rgba(0,212,255,0.06)',
+                boxShadow: 'var(--shadow-card)',
                 overflow: 'hidden',
                 zIndex: 300,
               }}
@@ -452,6 +458,45 @@ export default function Navbar({ role, onToggleSidebar }) {
                   </span>
                 </motion.div>
               ))}
+
+              {/* Footer hint */}
+              <div style={{
+                padding: '8px 16px',
+                borderTop: '1px solid rgba(255,255,255,0.06)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}>
+                <span style={{
+                  fontSize: 11,
+                  color: 'rgba(240,244,255,0.25)',
+                  fontFamily: 'JetBrains Mono, monospace',
+                }}>
+                  {suggestions.length} result{suggestions.length !== 1 ? 's' : ''}
+                </span>
+                {/* Keyboard hints — hidden on mobile (no keyboard nav) */}
+                {!isMobile && (
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <kbd style={{
+                      fontSize: 10, padding: '1px 5px', borderRadius: 4,
+                      background: 'rgba(255,255,255,0.06)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      color: 'rgba(240,244,255,0.3)',
+                      fontFamily: 'JetBrains Mono, monospace',
+                    }}>↑↓</kbd>
+                    <span style={{ fontSize: 10, color: 'rgba(240,244,255,0.2)' }}>navigate</span>
+                    <kbd style={{
+                      fontSize: 10, padding: '1px 5px', borderRadius: 4,
+                      background: 'rgba(255,255,255,0.06)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      color: 'rgba(240,244,255,0.3)',
+                      fontFamily: 'JetBrains Mono, monospace',
+                      marginLeft: 4,
+                    }}>↵</kbd>
+                    <span style={{ fontSize: 10, color: 'rgba(240,244,255,0.2)' }}>select</span>
+                  </div>
+                )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -464,7 +509,39 @@ export default function Navbar({ role, onToggleSidebar }) {
         alignItems: 'center',
         justifyContent: 'flex-end',
         gap: isMobile ? 6 : 12,
-      }}>        {/* Notification Bell */}
+      }}>
+
+        {/* Theme Toggle */}
+        <motion.button
+          onClick={toggleTheme}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          className="btn-ghost"
+          style={{
+            padding: '8px',
+            borderRadius: '50%',
+            width: isMobile ? 34 : 38,
+            height: isMobile ? 34 : 38,
+            justifyContent: 'center',
+            position: 'relative',
+          }}
+          aria-label="Toggle theme"
+          id="theme-toggle-btn"
+        >
+          <AnimatePresence mode="wait">
+            {theme === 'dark' ? (
+              <motion.div key="sun" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.2 }}>
+                <Sun size={16} />
+              </motion.div>
+            ) : (
+              <motion.div key="moon" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.2 }}>
+                <Moon size={16} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.button>
+
+        {/* Notification Bell */}
         <div style={{ position: 'relative' }}>
           <button
             onClick={() => { setShowNotifs(!showNotifs); setShowDropdown(false); }}
@@ -497,6 +574,7 @@ export default function Navbar({ role, onToggleSidebar }) {
             )}
           </button>
 
+          {/* Notification Panel */}
           <AnimatePresence>
             {showNotifs && (
               <motion.div
@@ -508,24 +586,37 @@ export default function Navbar({ role, onToggleSidebar }) {
                   right: isMobile ? -60 : 0,
                   top: 'calc(100% + 10px)',
                   width: isMobile ? 'calc(100vw - 24px)' : 360,
-                  background: 'var(--bg-modal)',
+                  maxWidth: isMobile ? 'calc(100vw - 24px)' : 360,
+                  background: 'var(--bg-dropdown)',
                   border: '1px solid var(--border-glass)',
                   borderRadius: 16,
                   padding: 0,
-                  boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
+                  boxShadow: 'var(--shadow-card)',
                   zIndex: 200,
                   overflow: 'hidden',
                 }}
               >
                 {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border-subtle)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Bell size={15} color="var(--cyan)" />
+                    <Bell size={15} color="#00d4ff" />
                     <span style={{ fontWeight: 700, fontSize: 15 }}>Notifications</span>
+                    {unread > 0 && (
+                      <span style={{ background: '#ff4444', color: '#fff', fontSize: 11, borderRadius: 20, padding: '1px 7px', fontWeight: 700 }}>
+                        {unread} new
+                      </span>
+                    )}
                   </div>
-                  <button onClick={() => setShowNotifs(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
-                    <X size={15} />
-                  </button>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {unread > 0 && (
+                      <button onClick={markAllRead} style={{ fontSize: 12, color: '#00d4ff', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Outfit, sans-serif' }}>
+                        Mark all read
+                      </button>
+                    )}
+                    <button onClick={() => setShowNotifs(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(240,244,255,0.4)' }}>
+                      <X size={15} />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Notification list */}
@@ -537,7 +628,7 @@ export default function Navbar({ role, onToggleSidebar }) {
                       <p style={{ fontSize: 12, color: 'rgba(240,244,255,0.2)', marginTop: 6 }}>Prescriptions from your doctor will appear here</p>
                     </div>
                   ) : (
-                    [...notifications].map((notif, i) => (
+                    [...notifications].reverse().map((notif, i) => (
                       <motion.div
                         key={notif.id || i}
                         initial={{ opacity: 0 }}
@@ -589,7 +680,6 @@ export default function Navbar({ role, onToggleSidebar }) {
                                 )}
                               </>
                             )}
-
                             <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 6 }}>
                               <Clock size={10} color="rgba(240,244,255,0.3)" />
                               <span style={{ fontSize: 11, color: 'rgba(240,244,255,0.3)', fontFamily: 'JetBrains Mono, monospace' }}>{notif.sentAt}</span>
@@ -634,10 +724,16 @@ export default function Navbar({ role, onToggleSidebar }) {
               fontSize: 13,
               fontWeight: 700,
               color: '#000',
+              flexShrink: 0,
             }}>
               {user?.name?.[0]?.toUpperCase() || 'U'}
             </div>
-            {!isMobile && <span style={{ fontSize: 14, fontWeight: 600 }}>{user?.name?.split(' ')[0]}</span>}
+            {/* Hide name on small mobile */}
+            {!isMobile && (
+              <span style={{ fontSize: 14, fontWeight: 600, fontFamily: 'Outfit, sans-serif' }}>
+                {user?.name?.split(' ')[0]}
+              </span>
+            )}
             <ChevronDown size={14} style={{ opacity: 0.5 }} />
           </button>
 
@@ -652,17 +748,32 @@ export default function Navbar({ role, onToggleSidebar }) {
                   right: 0,
                   top: 'calc(100% + 10px)',
                   width: 200,
-                  background: 'var(--bg-modal)',
+                  background: 'var(--bg-dropdown)',
                   border: '1px solid var(--border-glass)',
                   borderRadius: 14,
                   padding: 8,
-                  boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+                  boxShadow: 'var(--shadow-card)',
                   zIndex: 200,
                 }}
               >
+                <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 6 }}>
+                  <p style={{ fontSize: 14, fontWeight: 600 }}>{user?.name}</p>
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                    {role === 'doctor' ? '🩺 Doctor' : '🫀 Patient'}
+                  </p>
+                </div>
+                <button
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', borderRadius: 8, fontSize: 14, fontFamily: 'Outfit, sans-serif' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                >
+                  <Settings size={15} /> Settings
+                </button>
                 <button
                   onClick={handleLogout}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'none', border: 'none', color: '#ff6b6b', cursor: 'pointer', borderRadius: 8, fontSize: 14 }}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'none', border: 'none', color: '#ff6b6b', cursor: 'pointer', borderRadius: 8, fontSize: 14, fontFamily: 'Outfit, sans-serif' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,68,68,0.08)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'none'}
                 >
                   <LogOut size={15} /> Sign Out
                 </button>

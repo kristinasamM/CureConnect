@@ -34,9 +34,9 @@ export default function Sidebar({ role, mobileOpen, onClose }) {
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const navItems = role === 'doctor' ? doctorNav : patientNav;
-  const accentColor = role === 'doctor' ? 'var(--purple)' : 'var(--cyan)';
-  const gradientStart = role === 'doctor' ? 'var(--purple)' : 'var(--cyan)';
-  const gradientEnd = role === 'doctor' ? 'var(--pink)' : 'var(--green)';
+  const accentColor = role === 'doctor' ? '#8b5cf6' : '#00d4ff';
+  const gradientStart = role === 'doctor' ? '#8b5cf6' : '#00d4ff';
+  const gradientEnd = role === 'doctor' ? '#ec4899' : '#00ff88';
 
   const sections = [...new Set(navItems.map(n => n.section))];
 
@@ -77,7 +77,7 @@ export default function Sidebar({ role, mobileOpen, onClose }) {
           top: 0,
           left: 0,
           height: '100vh',
-          background: 'var(--bg-modal)',
+          background: 'var(--bg-sidebar)',
           borderRight: '1px solid var(--border-subtle)',
           display: 'flex',
           flexDirection: 'column',
