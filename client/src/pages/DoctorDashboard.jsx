@@ -314,7 +314,7 @@ export default function DoctorDashboard() {
         </motion.div>
 
         {/* Stats */}
-        <div className="dashboard-grid-4">
+        <div className="dashboard-grid-4"> 
           {stats.map((s, i) => (
             <motion.div key={s.label} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="glass-card" style={{ padding: '20px 22px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -329,238 +329,239 @@ export default function DoctorDashboard() {
           ))}
 
 
-        {/* ── Symptom Cascade Alerts ── */}
-        {cascadeAlerts.length > 0 && (
-          <div style={{ marginBottom: 28 }}>
-            <WidgetCard title="🚨 Critical Alerts: Escalating Symptom Cascades" icon={AlertTriangle} color="#ff4444">
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
-                {cascadeAlerts.map(alert => (
-                  <motion.div
-                    key={alert.patientId}
-                    whileHover={{ scale: 1.01 }}
-                    style={{
-                      background: 'rgba(255,68,68,0.05)',
-                      border: '1px solid rgba(255,68,68,0.3)',
-                      borderRadius: 12,
-                      padding: 16,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 12
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <h4 style={{ color: '#ff4444', margin: 0, fontSize: 16 }}>{alert.patientName}</h4>
-                      <span style={{ fontSize: 12, padding: '4px 8px', background: 'rgba(255,68,68,0.1)', borderRadius: 12, color: '#ff4444', fontWeight: 'bold' }}>
-                        Score: {alert.cascadeScore}
-                      </span>
-                    </div>
-                    
-                    <div>
-                      <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>New Emerging Symptoms:</p>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                        {alert.newSymptomsDetected.map(s => (
-                          <span key={s} style={{ fontSize: 11, padding: '2px 8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10 }}>{s}</span>
-                        ))}
+          {/* ── Symptom Cascade Alerts ── */}
+          <div id="alerts" style={{position:"absolute",marginTop:-80}} />
+          {cascadeAlerts.length > 0 && (
+            <div style={{ marginBottom: 28 }}>
+              <WidgetCard title="🚨 Critical Alerts: Escalating Symptom Cascades" icon={AlertTriangle} color="#ff4444">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
+                  {cascadeAlerts.map(alert => (
+                    <motion.div
+                      key={alert.patientId}
+                      whileHover={{ scale: 1.01 }}
+                      style={{
+                        background: 'rgba(255,68,68,0.05)',
+                        border: '1px solid rgba(255,68,68,0.3)',
+                        borderRadius: 12,
+                        padding: 16,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 12
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <h4 style={{ color: '#ff4444', margin: 0, fontSize: 16 }}>{alert.patientName}</h4>
+                        <span style={{ fontSize: 12, padding: '4px 8px', background: 'rgba(255,68,68,0.1)', borderRadius: 12, color: '#ff4444', fontWeight: 'bold' }}>
+                          Score: {alert.cascadeScore}
+                        </span>
                       </div>
-                    </div>
 
-                    <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
-                      <p style={{ fontSize: 12, color: 'rgba(240,244,255,0.7)' }}>Entries: <strong>{alert.totalEntries}</strong></p>
-                      <p style={{ fontSize: 12, color: 'rgba(240,244,255,0.7)' }}>Max Sev: <strong style={{ color: '#ff4444' }}>{alert.maxSeverity}/5</strong></p>
-                    </div>
+                      <div>
+                        <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>New Emerging Symptoms:</p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                          {alert.newSymptomsDetected.map(s => (
+                            <span key={s} style={{ fontSize: 11, padding: '2px 8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10 }}>{s}</span>
+                          ))}
+                        </div>
+                      </div>
 
-                    <button className="btn-primary" style={{ padding: '8px', fontSize: 13, background: 'rgba(255,68,68,0.1)', color: '#ff4444', border: '1px solid rgba(255,68,68,0.3)' }} onClick={() => {
+                      <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
+                        <p style={{ fontSize: 12, color: 'rgba(240,244,255,0.7)' }}>Entries: <strong>{alert.totalEntries}</strong></p>
+                        <p style={{ fontSize: 12, color: 'rgba(240,244,255,0.7)' }}>Max Sev: <strong style={{ color: '#ff4444' }}>{alert.maxSeverity}/5</strong></p>
+                      </div>
+
+                      <button className="btn-primary" style={{ padding: '8px', fontSize: 13, background: 'rgba(255,68,68,0.1)', color: '#ff4444', border: '1px solid rgba(255,68,68,0.3)' }} onClick={() => {
                         setPrescPatient(alert.patientName);
                         setPrescPatientId(alert.patientId);
                         setShowPrescPad(true);
                       }}>
-                      Review & Prescribe
-                    </button>
+                        Review & Prescribe
+                      </button>
+                    </motion.div>
+                  ))}
+                </div>
+              </WidgetCard>
+            </div>
+          )}
+
+          {/* ── Row 1: Add Patient + My Patients ── */}
+          <div id="patients" style={{ position: "absolute", marginTop: -80 }} />
+          <div className="dashboard-grid-2">
+
+            {/* Add Patient via Code */}
+            <WidgetCard title="Add Patient via Code" icon={Key} color="#00d4ff">
+              <p style={{ fontSize: 13, color: 'rgba(240,244,255,0.5)', lineHeight: 1.6, marginBottom: 18 }}>
+                Ask your patient to share their 8-digit access code from their dashboard. Enter it below to get access to their health documents.
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <input
+                  className="input-glass"
+                  placeholder="Enter patient access code..."
+                  value={codeInput}
+                  onChange={e => { setCodeInput(e.target.value.toUpperCase()); setCodeError(''); setCodeSuccess(''); }}
+                  onKeyDown={e => e.key === 'Enter' && handleAddPatient()}
+                  maxLength={10}
+                  style={{ letterSpacing: '4px', fontSize: 16, fontWeight: 700, fontFamily: 'JetBrains Mono, monospace', textAlign: 'center' }}
+                />
+                <button
+                  onClick={handleAddPatient}
+                  disabled={addingPatient}
+                  style={{ padding: '12px', background: 'linear-gradient(135deg,#00d4ff,#00ff88)', border: 'none', borderRadius: 12, color: '#000', fontWeight: 800, fontSize: 15, cursor: addingPatient ? 'not-allowed' : 'pointer', fontFamily: 'Outfit, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: addingPatient ? 0.7 : 1 }}
+                >
+                  {addingPatient ? (
+                    <><div style={{ width: 16, height: 16, border: '2px solid rgba(0,0,0,0.3)', borderTop: '2px solid #000', borderRadius: '50%', animation: 'spin-slow 0.8s linear infinite' }} /> Verifying...</>
+                  ) : (
+                    <><Plus size={16} /> Add Patient</>
+                  )}
+                </button>
+              </div>
+
+              <AnimatePresence>
+                {codeError && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 14px', background: 'rgba(255,68,68,0.1)', border: '1px solid rgba(255,68,68,0.2)', borderRadius: 10, color: '#ff6b6b', fontSize: 13, marginTop: 10, lineHeight: 1.5 }}>
+                    <AlertCircle size={15} style={{ marginTop: 1, flexShrink: 0 }} /> {codeError}
                   </motion.div>
+                )}
+                {codeSuccess && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: 'rgba(0,255,136,0.1)', border: '1px solid rgba(0,255,136,0.2)', borderRadius: 10, color: '#00ff88', fontSize: 13, marginTop: 10 }}>
+                    <CheckCircle2 size={15} /> {codeSuccess}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(0,212,255,0.06)', border: '1px solid rgba(0,212,255,0.12)', borderRadius: 10 }}>
+                <p style={{ fontSize: 12, color: 'rgba(0,212,255,0.7)' }}>
+                  ℹ️ Access is controlled by the patient. They can revoke it anytime by regenerating their code.
+                </p>
+              </div>
+            </WidgetCard>
+
+            {/* My Patients list */}
+            <WidgetCard title="My Patients" icon={Users} color="#8b5cf6">
+              {myPatients.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                  <Users size={40} style={{ color: 'rgba(240,244,255,0.15)', marginBottom: 14 }} />
+                  <p style={{ color: 'rgba(240,244,255,0.4)', fontSize: 14, marginBottom: 8 }}>No patients added yet</p>
+                  <p style={{ color: 'rgba(240,244,255,0.25)', fontSize: 13 }}>Ask a patient to share their access code, then enter it on the left</p>
+                </div>
+              ) : (
+                <>
+                  <div style={{ position: 'relative', marginBottom: 14 }}>
+                    <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(240,244,255,0.35)' }} />
+                    <input className="input-glass" placeholder="Search patients..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ paddingLeft: 38, height: 40, fontSize: 13 }} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 360, overflowY: 'auto' }}>
+                    {filtered.map((p, i) => (
+                      <motion.div key={p.patientId} initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
+                        style={{ background: expandedPatient === p.patientId ? 'rgba(139,92,246,0.1)' : 'rgba(255,255,255,0.03)', border: `1px solid ${expandedPatient === p.patientId ? 'rgba(139,92,246,0.25)' : 'rgba(255,255,255,0.06)'}`, borderRadius: 12, overflow: 'hidden' }}>
+                        <div
+                          style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', cursor: 'pointer' }}
+                          onClick={() => setExpandedPatient(expandedPatient === p.patientId ? null : p.patientId)}
+                        >
+                          <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg,#8b5cf6,#ec4899)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, fontWeight: 700, color: '#fff' }}>
+                            {p.name[0]}
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <p style={{ fontSize: 14, fontWeight: 700 }}>{p.name}</p>
+                            <p style={{ fontSize: 11, color: 'rgba(240,244,255,0.4)', marginTop: 2, fontFamily: 'JetBrains Mono, monospace' }}>
+                              Added {p.addedAt} · {p.docs?.length || 0} doc(s)
+                            </p>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span className="badge badge-green">{p.docs?.length || 0} docs</span>
+                            <ChevronDown size={15} style={{ color: 'rgba(240,244,255,0.3)', transform: expandedPatient === p.patientId ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
+                          </div>
+                        </div>
+
+                        <AnimatePresence>
+                          {expandedPatient === p.patientId && (
+                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden', borderTop: '1px solid rgba(139,92,246,0.1)' }}>
+                              <div style={{ padding: '12px 16px', display: 'flex', gap: 8 }}>
+                                <button
+                                  onClick={() => setViewingPatient(p)}
+                                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '9px', background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: 10, color: '#00d4ff', fontSize: 13, cursor: 'pointer', fontFamily: 'Outfit, sans-serif', fontWeight: 600 }}>
+                                  <Eye size={13} /> View Documents
+                                </button>
+                                <button
+                                  onClick={() => { setPrescPatient(p.name); setPrescPatientId(p.patientId); setShowPrescPad(true); }}
+                                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '9px', background: 'linear-gradient(135deg,#8b5cf6,#ec4899)', border: 'none', borderRadius: 10, color: '#fff', fontSize: 13, cursor: 'pointer', fontFamily: 'Outfit, sans-serif', fontWeight: 700 }}>
+                                  <Edit3 size={13} /> Prescribe
+                                </button>
+                                <button
+                                  onClick={() => removePatient(p.patientId)}
+                                  style={{ padding: '9px 12px', background: 'rgba(255,68,68,0.08)', border: '1px solid rgba(255,68,68,0.15)', borderRadius: 10, color: '#ff6b6b', cursor: 'pointer' }}
+                                  title="Remove patient">
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </WidgetCard>
+          </div>
+
+          {/* ── Row 2: Schedule + Analytics ── */}
+          <div id="analytics" style={{ position: "absolute", marginTop: -80 }} />
+          {/* Placeholder for Records/Prescriptions which are part of the Patients list or other cards */}
+          <div id="prescriptions" style={{ position: "absolute", marginTop: -80 }} />
+          <div id="records" style={{ position: "absolute", marginTop: -80 }} />
+          <div id="appointments" style={{ position: "absolute", marginTop: -80 }} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 24 }}>
+            <WidgetCard title="Today's Schedule" icon={Calendar} color="#00d4ff">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {appointmentsToday.map((appt, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px', background: appt.status === 'upcoming' ? 'rgba(0,212,255,0.06)' : 'rgba(255,255,255,0.03)', border: `1px solid ${appt.status === 'upcoming' ? 'rgba(0,212,255,0.15)' : 'rgba(255,255,255,0.05)'}`, borderRadius: 10 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: appt.status === 'completed' ? '#00ff88' : '#00d4ff', boxShadow: appt.status === 'upcoming' ? '0 0 8px rgba(0,212,255,0.6)' : 'none' }} />
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: 13, fontWeight: 600 }}>{appt.patient}</p>
+                      <p style={{ fontSize: 11, color: 'rgba(240,244,255,0.4)' }}>{appt.type} · {appt.duration}min</p>
+                    </div>
+                    <p style={{ fontSize: 12, fontFamily: 'JetBrains Mono, monospace', color: appt.status === 'upcoming' ? '#00d4ff' : 'rgba(240,244,255,0.4)' }}>{appt.time}</p>
+                  </div>
                 ))}
               </div>
             </WidgetCard>
           </div>
-        )}
 
-        {/* ── Row 1: Add Patient + My Patients ── */}
-        <div id="patients" style={{position:"absolute",marginTop:-80}} />
-        <div className="dashboard-grid-2">
+          {/* ── Row 3: AI Suggestions ── */}
 
-          {/* Add Patient via Code */}
-          <WidgetCard title="Add Patient via Code" icon={Key} color="#00d4ff">
-            <p style={{ fontSize: 13, color: 'rgba(240,244,255,0.5)', lineHeight: 1.6, marginBottom: 18 }}>
-              Ask your patient to share their 8-digit access code from their dashboard. Enter it below to get access to their health documents.
-            </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <input
-                className="input-glass"
-                placeholder="Enter patient access code..."
-                value={codeInput}
-                onChange={e => { setCodeInput(e.target.value.toUpperCase()); setCodeError(''); setCodeSuccess(''); }}
-                onKeyDown={e => e.key === 'Enter' && handleAddPatient()}
-                maxLength={10}
-                style={{ letterSpacing: '4px', fontSize: 16, fontWeight: 700, fontFamily: 'JetBrains Mono, monospace', textAlign: 'center' }}
-              />
-              <button
-                onClick={handleAddPatient}
-                disabled={addingPatient}
-                style={{ padding: '12px', background: 'linear-gradient(135deg,#00d4ff,#00ff88)', border: 'none', borderRadius: 12, color: '#000', fontWeight: 800, fontSize: 15, cursor: addingPatient ? 'not-allowed' : 'pointer', fontFamily: 'Outfit, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: addingPatient ? 0.7 : 1 }}
-              >
-                {addingPatient ? (
-                  <><div style={{ width: 16, height: 16, border: '2px solid rgba(0,0,0,0.3)', borderTop: '2px solid #000', borderRadius: '50%', animation: 'spin-slow 0.8s linear infinite' }} /> Verifying...</>
-                ) : (
-                  <><Plus size={16} /> Add Patient</>
-                )}
-              </button>
-            </div>
 
-            <AnimatePresence>
-              {codeError && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 14px', background: 'rgba(255,68,68,0.1)', border: '1px solid rgba(255,68,68,0.2)', borderRadius: 10, color: '#ff6b6b', fontSize: 13, marginTop: 10, lineHeight: 1.5 }}>
-                  <AlertCircle size={15} style={{ marginTop: 1, flexShrink: 0 }} /> {codeError}
-                </motion.div>
-              )}
-              {codeSuccess && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: 'rgba(0,255,136,0.1)', border: '1px solid rgba(0,255,136,0.2)', borderRadius: 10, color: '#00ff88', fontSize: 13, marginTop: 10 }}>
-                  <CheckCircle2 size={15} /> {codeSuccess}
-                </motion.div>
-              )}
-            </AnimatePresence>
 
-            <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(0,212,255,0.06)', border: '1px solid rgba(0,212,255,0.12)', borderRadius: 10 }}>
-              <p style={{ fontSize: 12, color: 'rgba(0,212,255,0.7)' }}>
-                ℹ️ Access is controlled by the patient. They can revoke it anytime by regenerating their code.
-              </p>
-            </div>
-          </WidgetCard>
-
-          {/* My Patients list */}
-          <WidgetCard title="My Patients" icon={Users} color="#8b5cf6">
-            {myPatients.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-                <Users size={40} style={{ color: 'rgba(240,244,255,0.15)', marginBottom: 14 }} />
-                <p style={{ color: 'rgba(240,244,255,0.4)', fontSize: 14, marginBottom: 8 }}>No patients added yet</p>
-                <p style={{ color: 'rgba(240,244,255,0.25)', fontSize: 13 }}>Ask a patient to share their access code, then enter it on the left</p>
-              </div>
-            ) : (
-              <>
-                <div style={{ position: 'relative', marginBottom: 14 }}>
-                  <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(240,244,255,0.35)' }} />
-                  <input className="input-glass" placeholder="Search patients..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ paddingLeft: 38, height: 40, fontSize: 13 }} />
+          {/* ── Prescription Modal ── */}
+          {showPrescPad && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-overlay)', backdropFilter: 'blur(10px)', zIndex: 500 }} onClick={e => { if (e.target === e.currentTarget) setShowPrescPad(false); }}>
+              <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ width: '100%', maxWidth: 520, maxHeight: '88vh', overflowY: 'auto', padding: 28, border: '1px solid rgba(139,92,246,0.3)', boxShadow: '0 16px 40px rgba(139,92,246,0.12)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
+                  <h3 style={{ fontSize: 20, fontWeight: 800 }}>Digital Prescription Pad</h3>
+                  <button onClick={() => setShowPrescPad(false)} style={{ background: 'none', border: 'none', color: 'rgba(240,244,255,0.4)', cursor: 'pointer', fontSize: 20 }}>✕</button>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 360, overflowY: 'auto' }}>
-                  {filtered.map((p, i) => (
-                    <motion.div key={p.patientId} initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
-                      style={{ background: expandedPatient === p.patientId ? 'rgba(139,92,246,0.1)' : 'rgba(255,255,255,0.03)', border: `1px solid ${expandedPatient === p.patientId ? 'rgba(139,92,246,0.25)' : 'rgba(255,255,255,0.06)'}`, borderRadius: 12, overflow: 'hidden' }}>
-                      <div
-                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', cursor: 'pointer' }}
-                        onClick={() => setExpandedPatient(expandedPatient === p.patientId ? null : p.patientId)}
-                      >
-                        <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg,#8b5cf6,#ec4899)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, fontWeight: 700, color: '#fff' }}>
-                          {p.name[0]}
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <p style={{ fontSize: 14, fontWeight: 700 }}>{p.name}</p>
-                          <p style={{ fontSize: 11, color: 'rgba(240,244,255,0.4)', marginTop: 2, fontFamily: 'JetBrains Mono, monospace' }}>
-                            Added {p.addedAt} · {p.docs?.length || 0} doc(s)
-                          </p>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span className="badge badge-green">{p.docs?.length || 0} docs</span>
-                          <ChevronDown size={15} style={{ color: 'rgba(240,244,255,0.3)', transform: expandedPatient === p.patientId ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
-                        </div>
-                      </div>
-
-                      <AnimatePresence>
-                        {expandedPatient === p.patientId && (
-                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden', borderTop: '1px solid rgba(139,92,246,0.1)' }}>
-                            <div style={{ padding: '12px 16px', display: 'flex', gap: 8 }}>
-                              <button
-                                onClick={() => setViewingPatient(p)}
-                                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '9px', background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: 10, color: '#00d4ff', fontSize: 13, cursor: 'pointer', fontFamily: 'Outfit, sans-serif', fontWeight: 600 }}>
-                                <Eye size={13} /> View Documents
-                              </button>
-                              <button
-                                onClick={() => { setPrescPatient(p.name); setPrescPatientId(p.patientId); setShowPrescPad(true); }}
-                                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '9px', background: 'linear-gradient(135deg,#8b5cf6,#ec4899)', border: 'none', borderRadius: 10, color: '#fff', fontSize: 13, cursor: 'pointer', fontFamily: 'Outfit, sans-serif', fontWeight: 700 }}>
-                                <Edit3 size={13} /> Prescribe
-                              </button>
-                              <button
-                                onClick={() => removePatient(p.patientId)}
-                                style={{ padding: '9px 12px', background: 'rgba(255,68,68,0.08)', border: '1px solid rgba(255,68,68,0.15)', borderRadius: 10, color: '#ff6b6b', cursor: 'pointer' }}
-                                title="Remove patient">
-                                <Trash2 size={14} />
-                              </button>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </motion.div>
-                  ))}
-                </div>
-              </>
-            )}
-          </WidgetCard>
-        </div>
-
-        {/* ── Row 2: Schedule + Analytics ── */}
-        <div id="analytics" style={{position:"absolute",marginTop:-80}} />
-        {/* Placeholder for Records/Prescriptions which are part of the Patients list or other cards */}
-        <div id="prescriptions" style={{position:"absolute",marginTop:-80}} />
-        <div id="records" style={{position:"absolute",marginTop:-80}} />
-        <div id="appointments" style={{position:"absolute",marginTop:-80}} />
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 24 }}>
-          <WidgetCard title="Today's Schedule" icon={Calendar} color="#00d4ff">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {appointmentsToday.map((appt, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px', background: appt.status === 'upcoming' ? 'rgba(0,212,255,0.06)' : 'rgba(255,255,255,0.03)', border: `1px solid ${appt.status === 'upcoming' ? 'rgba(0,212,255,0.15)' : 'rgba(255,255,255,0.05)'}`, borderRadius: 10 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: appt.status === 'completed' ? '#00ff88' : '#00d4ff', boxShadow: appt.status === 'upcoming' ? '0 0 8px rgba(0,212,255,0.6)' : 'none' }} />
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600 }}>{appt.patient}</p>
-                    <p style={{ fontSize: 11, color: 'rgba(240,244,255,0.4)' }}>{appt.type} · {appt.duration}min</p>
-                  </div>
-                  <p style={{ fontSize: 12, fontFamily: 'JetBrains Mono, monospace', color: appt.status === 'upcoming' ? '#00d4ff' : 'rgba(240,244,255,0.4)' }}>{appt.time}</p>
-                </div>
-              ))}
-            </div>
-          </WidgetCard>
-        </div>
-
-        {/* ── Row 3: AI Suggestions ── */}
-
-
-
-
-        {/* ── Prescription Modal ── */}
-        {showPrescPad && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-overlay)', backdropFilter: 'blur(10px)', zIndex: 500 }} onClick={e => { if (e.target === e.currentTarget) setShowPrescPad(false); }}>
-            <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ width: '100%', maxWidth: 520, maxHeight: '88vh', overflowY: 'auto', padding: 28, border: '1px solid rgba(139,92,246,0.3)', boxShadow: '0 16px 40px rgba(139,92,246,0.12)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
-                <h3 style={{ fontSize: 20, fontWeight: 800 }}>Digital Prescription Pad</h3>
-                <button onClick={() => setShowPrescPad(false)} style={{ background: 'none', border: 'none', color: 'rgba(240,244,255,0.4)', cursor: 'pointer', fontSize: 20 }}>✕</button>
-              </div>
-              <PrescriptionPad
-                patient={prescPatient}
-                patientId={prescPatientId}
-                doctorName={user?.name}
-                onClose={() => setShowPrescPad(false)}
-              />
+                <PrescriptionPad
+                  patient={prescPatient}
+                  patientId={prescPatientId}
+                  doctorName={user?.name}
+                  onClose={() => setShowPrescPad(false)}
+                />
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
+          )}
 
-        {/* ── Patient Documents Modal ── */}
-        {viewingPatient && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-overlay)', backdropFilter: 'blur(10px)', zIndex: 500 }} onClick={e => { if (e.target === e.currentTarget) setViewingPatient(null); }}>
-            <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ width: '100%', maxWidth: 560, maxHeight: '88vh', overflowY: 'auto', padding: 28, border: '1px solid rgba(0,212,255,0.2)', boxShadow: '0 16px 40px rgba(0,212,255,0.08)' }}>
-              <PatientDocuments patient={viewingPatient} onClose={() => setViewingPatient(null)} />
+          {/* ── Patient Documents Modal ── */}
+          {viewingPatient && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-overlay)', backdropFilter: 'blur(10px)', zIndex: 500 }} onClick={e => { if (e.target === e.currentTarget) setViewingPatient(null); }}>
+              <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ width: '100%', maxWidth: 560, maxHeight: '88vh', overflowY: 'auto', padding: 28, border: '1px solid rgba(0,212,255,0.2)', boxShadow: '0 16px 40px rgba(0,212,255,0.08)' }}>
+                <PatientDocuments patient={viewingPatient} onClose={() => setViewingPatient(null)} />
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
+          )}
 
-    </main>
+      </main>
     </div>
   );
 }

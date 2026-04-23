@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 
 const patientNav = [
   { icon: Home, label: 'Dashboard', path: '/patient', section: 'main' },
+  { icon: Activity, label: 'Symptom Tracker', path: '/patient#symptoms', section: 'main' },
   { icon: FileText, label: 'Health Locker', path: '/patient#locker', section: 'records' },
   { icon: Calendar, label: 'Appointments', path: '/patient#appointments', section: 'records' },
   { icon: Pill, label: 'Medications', path: '/patient#medications', section: 'records' },
@@ -16,6 +17,7 @@ const patientNav = [
 
 const doctorNav = [
   { icon: Home, label: 'Dashboard', path: '/doctor', section: 'main' },
+  { icon: AlertTriangle, label: 'Cascade Alerts', path: '/doctor#alerts', section: 'main' },
   { icon: Users, label: 'Patients', path: '/doctor#patients', section: 'main' },
   { icon: Calendar, label: 'Appointments', path: '/doctor#appointments', section: 'main' },
   { icon: ClipboardList, label: 'Prescriptions', multi: false, path: '/doctor#prescriptions', section: 'records' },

@@ -534,6 +534,7 @@ export default function PatientDashboard() {
           </WidgetCard>
 
           {/* ── Symptom Tracker ── */}
+          <div id="symptoms" style={{position:"absolute",marginTop:-80}} />
           <WidgetCard title="Daily Symptom Tracker" icon={Activity} color="#f59e0b">
             <SymptomLogger />
           </WidgetCard>
