@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import ECGLine from '../components/ECGLine';
+import ClinicStockTracker from '../components/ClinicStockTracker';
 import {
   Users, Calendar, ClipboardList, BarChart2, Brain,
   Plus, Search, ChevronRight, Clock, FileText,
@@ -452,6 +453,10 @@ export default function DoctorDashboard() {
 
         {/* ── Row 2: Schedule + Analytics ── */}
         <div id="analytics" style={{position:"absolute",marginTop:-80}} />
+        {/* Placeholder for Records/Prescriptions which are part of the Patients list or other cards */}
+        <div id="prescriptions" style={{position:"absolute",marginTop:-80}} />
+        <div id="records" style={{position:"absolute",marginTop:-80}} />
+        <div id="appointments" style={{position:"absolute",marginTop:-80}} />
         <div className="dashboard-grid-2">
           <WidgetCard title="Today's Schedule" icon={Calendar} color="#00d4ff">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -474,7 +479,7 @@ export default function DoctorDashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                 <XAxis dataKey="month" tick={{ fill: 'rgba(240,244,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: 'rgba(240,244,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ background: 'rgba(6,13,28,0.95)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: 10, color: '#f0f4ff', fontSize: 13 }} />
+                <Tooltip contentStyle={{ background: 'var(--bg-dropdown)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 13 }} />
                 <Bar dataKey="patients" name="New Patients" fill="#8b5cf6" radius={[4,4,0,0]} />
                 <Bar dataKey="appointments" name="Appointments" fill="#00d4ff" radius={[4,4,0,0]} />
               </BarChart>
@@ -498,9 +503,17 @@ export default function DoctorDashboard() {
           </div>
         </WidgetCard>
 
+        {/* ── Row 4: Clinic Inventory Tracker ── */}
+        <div id="inventory" style={{position:"absolute",marginTop:-80}} />
+        <div style={{ marginTop: 24 }}>
+          <WidgetCard title="Clinic Medicine Inventory & Stock Tracker" icon={Pill} color="#ec4899">
+            <ClinicStockTracker doctorId={user?._id || 'demo_doctor'} />
+          </WidgetCard>
+        </div>
+
         {/* ── Prescription Modal ── */}
         {showPrescPad && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(3,7,18,0.85)', backdropFilter: 'blur(10px)', zIndex: 500 }} onClick={e => { if (e.target === e.currentTarget) setShowPrescPad(false); }}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-overlay)', backdropFilter: 'blur(10px)', zIndex: 500 }} onClick={e => { if (e.target === e.currentTarget) setShowPrescPad(false); }}>
             <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ width: '100%', maxWidth: 520, maxHeight: '88vh', overflowY: 'auto', padding: 28, border: '1px solid rgba(139,92,246,0.3)', boxShadow: '0 16px 40px rgba(139,92,246,0.12)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
                 <h3 style={{ fontSize: 20, fontWeight: 800 }}>Digital Prescription Pad</h3>
@@ -518,7 +531,7 @@ export default function DoctorDashboard() {
 
         {/* ── Patient Documents Modal ── */}
         {viewingPatient && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(3,7,18,0.85)', backdropFilter: 'blur(10px)', zIndex: 500 }} onClick={e => { if (e.target === e.currentTarget) setViewingPatient(null); }}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-overlay)', backdropFilter: 'blur(10px)', zIndex: 500 }} onClick={e => { if (e.target === e.currentTarget) setViewingPatient(null); }}>
             <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ width: '100%', maxWidth: 560, maxHeight: '88vh', overflowY: 'auto', padding: 28, border: '1px solid rgba(0,212,255,0.2)', boxShadow: '0 16px 40px rgba(0,212,255,0.08)' }}>
               <PatientDocuments patient={viewingPatient} onClose={() => setViewingPatient(null)} />
             </motion.div>

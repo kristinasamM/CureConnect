@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const HealthRecord = require('../models/HealthRecord');
 const { protect } = require('../middleware/auth');
 const router = express.Router();
 
@@ -13,7 +14,7 @@ router.post('/register', async (req, res) => {
       name, email, password, role,
       specialization, hospital, licenseNumber,
       bloodGroup, dateOfBirth, gender, phone,
-      height, weight, chronicConditions, allergies
+      height, weight, chronicConditions, allergies, pastDocuments
     } = req.body;
 
     if (!name || !email || !password || !role) {
@@ -47,6 +48,24 @@ router.post('/register', async (req, res) => {
     });
 
     console.log(`✅ New ${role} registered: ${user.name} (${user.email}) — ID: ${user._id}`);
+
+    if (pastDocuments && pastDocuments.length > 0 && role === 'patient') {
+      try {
+        const recordsToInsert = pastDocuments.map(doc => ({
+          patient: user._id,
+          title: doc.title || doc.fileName,
+          type: doc.type || 'lab_report',
+          fileUrl: doc.fileUrl,
+          fileName: doc.fileName,
+          fileType: doc.fileType || 'application/pdf',
+          date: new Date()
+        }));
+        await HealthRecord.insertMany(recordsToInsert);
+        console.log(`✅ Uploaded ${pastDocuments.length} past documents for ${user.name}`);
+      } catch (err) {
+        console.error('Failed to save past documents during registration:', err.message);
+      }
+    }
 
     res.status(201).json({
       ...user.toJSON(),

@@ -6,7 +6,7 @@ import { api } from '../context/AuthContext';
 import ParticleField from '../components/ParticleField';
 import {
   Heart, Mail, Lock, User, Phone, Eye, EyeOff,
-  ArrowRight, Loader, AlertCircle, CheckCircle2, LogIn, Wifi, WifiOff
+  ArrowRight, Loader, AlertCircle, CheckCircle2, LogIn, Wifi, WifiOff, Upload
 } from 'lucide-react';
 
 // ─── Reusable icon-prefixed input (defined OUTSIDE to prevent re-mount) ──────
@@ -70,6 +70,25 @@ export default function AuthPage() {
   const [weight, setWeight]               = useState('');
   const [chronicConditions, setChronicConditions] = useState('');
   const [allergies, setAllergies]         = useState('');
+  const [pastDocuments, setPastDocuments] = useState([]);
+
+  const handleFileUpload = (e) => {
+    const files = Array.from(e.target.files);
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setPastDocuments(prev => [...prev, {
+          fileName: file.name,
+          fileType: file.type,
+          fileUrl: ev.target.result,
+          title: file.name,
+          type: (file.name.toLowerCase().includes('rx') || file.name.toLowerCase().includes('prescription')) ? 'prescription' :
+                (file.type.includes('image') ? 'imaging' : 'lab_report')
+        }]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
 
   // ── Switch to sign-in tab, keeping the email pre-filled ─────────────────
   const switchToSignIn = () => {
@@ -110,6 +129,7 @@ export default function AuthPage() {
           weight: weight ? Number(weight) : undefined,
           chronicConditions: chronicConditions ? chronicConditions.split(',').map(s => s.trim()).filter(Boolean) : [],
           allergies: allergies ? allergies.split(',').map(s => s.trim()).filter(Boolean) : [],
+          pastDocuments
         };
         const data = await register(userData);
         setSuccess('✅ Account created! Taking you to your dashboard...');
@@ -146,7 +166,7 @@ export default function AuthPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#030712',
+      background: 'var(--bg-deepest)',
       display: 'flex',
       position: 'relative',
       overflow: 'hidden',
@@ -357,12 +377,12 @@ export default function AuthPage() {
                     <>
                       <div style={{display: 'flex', gap: 10}}>
                         <select className="input-glass" value={bloodGroup} onChange={e => setBloodGroup(e.target.value)}
-                          style={{ background: 'rgba(10,22,40,0.9)', color: bloodGroup ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+                          style={{ background: 'var(--select-bg)', color: bloodGroup ? 'var(--text-primary)' : 'var(--text-muted)' }}>
                           <option value="">Blood Group (optional)</option>
                           {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(g => <option key={g} value={g}>{g}</option>)}
                         </select>
                         <select className="input-glass" value={gender} onChange={e => setGender(e.target.value)}
-                          style={{ background: 'rgba(10,22,40,0.9)' }}>
+                          style={{ background: 'var(--select-bg)' }}>
                           <option value="">Gender (optional)</option>
                           <option value="male">Male</option>
                           <option value="female">Female</option>
@@ -375,6 +395,22 @@ export default function AuthPage() {
                       </div>
                       <input className="input-glass" placeholder="Pre-existing Conditions (e.g. Diabetes, Asthma)" value={chronicConditions} onChange={e => setChronicConditions(e.target.value)} />
                       <input className="input-glass" placeholder="Allergies (e.g. Penicillin, Peanuts)" value={allergies} onChange={e => setAllergies(e.target.value)} />
+                      
+                      <div style={{ marginTop: 10, padding: 16, border: '1px dashed rgba(0,212,255,0.3)', borderRadius: 12, background: 'rgba(0,0,0,0.2)', textAlign: 'center', position: 'relative' }}>
+                        <Upload size={24} color="rgba(0,212,255,0.6)" style={{ margin: '0 auto 8px' }} />
+                        <p style={{ fontSize: 13, color: 'rgba(240,244,255,0.6)', marginBottom: 4 }}>Upload Past Medical Documents</p>
+                        <p style={{ fontSize: 11, color: 'rgba(240,244,255,0.4)' }}>PDF, JPG, PNG (Generates your AI timeline instantly)</p>
+                        <input type="file" multiple accept="image/*,.pdf" onChange={handleFileUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} />
+                        {pastDocuments.length > 0 && (
+                          <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
+                            {pastDocuments.map((doc, i) => (
+                              <span key={i} style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: 12, padding: '4px 8px', fontSize: 11, color: '#00d4ff' }}>
+                                {doc.fileName.substring(0, 15)}{doc.fileName.length > 15 ? '...' : ''}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </>
                   )}
                 </motion.div>
