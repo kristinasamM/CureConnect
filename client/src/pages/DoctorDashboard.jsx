@@ -487,7 +487,9 @@ export default function DoctorDashboard() {
           </motion.div>
         )}
 
-      </main>
+    </main>
     </div>
   );
 }
+// Inventory feature removed
+
