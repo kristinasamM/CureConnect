@@ -3,8 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth, api } from '../context/AuthContext';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
-import ECGLine from '../components/ECGLine';
-import DailyVitalsModal from '../components/DailyVitalsModal';
+
 import {
   Activity, FileText, Calendar, Pill,
   TrendingUp, Heart, Plus, Upload, Search,
@@ -13,9 +12,7 @@ import {
   Stethoscope, AlertTriangle, X, Eye,
   ChevronDown, CheckCircle2, Trash2, Video, MapPin, Phone, ArrowUpDown, User
 } from 'lucide-react';
-import {
-  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
-} from 'recharts';
+
 
 // Dynamic Doctors list is fetched from API.
 
@@ -212,37 +209,7 @@ export default function PatientDashboard() {
   const [accessCode, setAccessCode] = useState('');
   const [codeCopied, setCodeCopied] = useState(false);
 
-  // AI Q&A state
-  const [openCategory, setOpenCategory] = useState(null);
-  const [selectedQ, setSelectedQ] = useState(null);
 
-  // SOS state
-  const [sosCountdown, setSosCountdown] = useState(null);
-
-  // Daily Vitals Modal State
-  const [showVitalsModal, setShowVitalsModal] = useState(false);
-  const [liveVitals, setLiveVitals] = useState(null);
-
-  // Check if vitals have been logged today
-  useEffect(() => {
-    if (user?._id) {
-      const today = new Date().toLocaleDateString();
-      const lastCheck = localStorage.getItem(`lastVitalsLog_${user._id}`);
-      if (lastCheck !== today) {
-        setShowVitalsModal(true);
-      }
-    }
-  }, [user]);
-
-  const handleVitalsComplete = (data) => {
-    if (data && data.bp && data.hr && data.spo2) {
-      setLiveVitals(data);
-    }
-    if (user?._id) {
-      localStorage.setItem(`lastVitalsLog_${user._id}`, new Date().toLocaleDateString());
-    }
-    setShowVitalsModal(false);
-  };
 
   // Extract user health conditions
   const userConditionsText = (user?.chronicConditions || []).join(' ').toLowerCase();
@@ -482,13 +449,7 @@ export default function PatientDashboard() {
     }
   };
 
-  const triggerSOS = () => {
-    setSosCountdown(5);
-    const iv = setInterval(() => setSosCountdown(c => {
-      if (c <= 1) { clearInterval(iv); setSosCountdown(null); return null; }
-      return c - 1;
-    }), 1000);
-  };
+
 
   // Removed const vitals as it was moved up
 
@@ -529,11 +490,7 @@ export default function PatientDashboard() {
 
   return (
     <div className="dashboard-layout">
-      <DailyVitalsModal 
-        isOpen={showVitalsModal} 
-        onClose={() => setShowVitalsModal(false)} 
-        onComplete={handleVitalsComplete} 
-      />
+
       <div className="bg-grid" />
       <Sidebar role="patient" mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <Navbar role="patient" onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
@@ -550,31 +507,16 @@ export default function PatientDashboard() {
                 </span> 👋
               </h1>
               <p style={{ color: 'rgba(240,244,255,0.45)', marginTop: 6, fontSize: 14 }}>
-                Health score: {user?.healthScore || 78}/100 · 1 appointment today
+                Manage your health records and appointments
               </p>
             </div>
-            <motion.button
-              onClick={triggerSOS}
-              animate={sosCountdown ? { scale: [1,1.04,1] } : {}}
-              transition={{ duration: 0.8, repeat: Infinity }}
-              style={{ padding: '13px 24px', background: 'linear-gradient(135deg,#ff4444,#ff6b6b)', border: 'none', borderRadius: 50, color: '#fff', fontWeight: 800, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 4px 16px rgba(255,68,68,0.3)', fontFamily: 'Outfit, sans-serif', minHeight: 44 }}
-            >
-              <AlertTriangle size={18} />
-              {sosCountdown ? `SOS in ${sosCountdown}s` : 'EMERGENCY SOS'}
-            </motion.button>
           </div>
           <div style={{ marginTop: 16 }}><ECGLine color="#00d4ff" height={44} /></div>
         </motion.div>
 
         {/* ── Row 1: Score + Vitals ── */}
         <div id="health" style={{position:"absolute",marginTop:-80}} />
-        <div className="dashboard-grid-2">
-          <WidgetCard title="Health Score" icon={Activity} color="#00ff88">
-            <HealthMeter score={user?.healthScore || 78} />
-            <div style={{ textAlign: 'center', marginTop: 14 }}>
-              <span className="badge badge-green">Good Condition</span>
-            </div>
-          </WidgetCard>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 24 }}>
 
           <WidgetCard title="Today's Vitals" icon={Heart} color="#ff4444">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10 }}>
@@ -814,25 +756,7 @@ export default function PatientDashboard() {
 
         {/* ── Row 4: Vitals Chart + Appointments ── */}
         <div id="appointments" style={{position:"absolute",marginTop:-80}} />
-        <div className="dashboard-grid-2-reverse">
-          <WidgetCard title="Weekly Health Trends" icon={TrendingUp} color="#00d4ff">
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={vitalsData}>
-                <defs>
-                  <linearGradient id="bpGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#00d4ff" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#00d4ff" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                <XAxis dataKey="day" tick={{ fill: 'rgba(240,244,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: 'rgba(240,244,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ background: 'var(--bg-dropdown)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 13 }} />
-                <Area type="monotone" dataKey="bp" name="Systolic BP" stroke="#00d4ff" fill="url(#bpGrad)" strokeWidth={2} dot={false} />
-                <Area type="monotone" dataKey="hr" name="Heart Rate" stroke="#ff4444" fill="none" strokeWidth={2} dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </WidgetCard>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 24 }}>
 
           <WidgetCard title="Appointments" icon={Calendar} color="#8b5cf6" action={{ label: 'Book New', icon: Plus, fn: () => setShowBooking(true) }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 280, overflowY: 'auto' }}>
@@ -970,66 +894,6 @@ export default function PatientDashboard() {
             )}
           </AnimatePresence>
         </div>
-
-        {/* ── Row 5: AI Health Q&A ── */}
-        <WidgetCard title="AI Health Assistant — Ask a Question" icon={Brain} color="#8b5cf6">
-          <p style={{ fontSize: 13, color: 'rgba(240,244,255,0.45)', marginBottom: 20 }}>
-            Select a question below to get an instant AI-powered answer tailored to your health profile.
-          </p>
-
-          <div className="dashboard-grid-equal" style={{ gap: 12, marginBottom: 20 }}>
-            {AI_QA.map(cat => (
-              <div key={cat.category}>
-                <button
-                  onClick={() => setOpenCategory(openCategory === cat.category ? null : cat.category)}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: openCategory === cat.category ? 'rgba(139,92,246,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${openCategory === cat.category ? 'rgba(139,92,246,0.35)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 12, cursor: 'pointer', color: openCategory === cat.category ? '#8b5cf6' : 'rgba(240,244,255,0.7)', fontFamily: 'Outfit, sans-serif', fontSize: 14, fontWeight: 600, transition: 'all 0.2s' }}
-                >
-                  {cat.category}
-                  <ChevronDown size={15} style={{ transform: openCategory === cat.category ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
-                </button>
-
-                <AnimatePresence>
-                  {openCategory === cat.category && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
-                        {cat.questions.map((qa, qi) => (
-                          <button
-                            key={qi}
-                            onClick={() => setSelectedQ(selectedQ?.q === qa.q ? null : qa)}
-                            style={{ textAlign: 'left', padding: '10px 14px', background: selectedQ?.q === qa.q ? 'rgba(139,92,246,0.12)' : 'rgba(255,255,255,0.03)', border: `1px solid ${selectedQ?.q === qa.q ? 'rgba(139,92,246,0.3)' : 'rgba(255,255,255,0.06)'}`, borderRadius: 10, cursor: 'pointer', color: 'rgba(240,244,255,0.8)', fontSize: 13, fontFamily: 'Outfit, sans-serif', lineHeight: 1.5, transition: 'all 0.2s' }}
-                          >
-                            {selectedQ?.q === qa.q ? '▼ ' : '▷ '}{qa.q}
-                          </button>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ))}
-          </div>
-
-          {/* Answer panel */}
-          <AnimatePresence>
-            {selectedQ && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                style={{ padding: '20px', background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: 14, position: 'relative' }}
-              >
-                <button onClick={() => setSelectedQ(null)} style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(240,244,255,0.4)' }}>
-                  <X size={16} />
-                </button>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                  <span style={{ fontSize: 20 }}>🤖</span>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: '#8b5cf6' }}>{selectedQ.q}</p>
-                </div>
-                <p style={{ fontSize: 14, color: 'rgba(240,244,255,0.75)', lineHeight: 1.75 }}>{selectedQ.a}</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </WidgetCard>
 
       </main>
     </div>

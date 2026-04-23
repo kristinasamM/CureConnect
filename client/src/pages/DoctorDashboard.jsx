@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
-import ECGLine from '../components/ECGLine';
+
 import ClinicStockTracker from '../components/ClinicStockTracker';
 import {
   Users, Calendar, ClipboardList, BarChart2, Brain,
@@ -12,26 +12,7 @@ import {
   Send, Zap, Star, Key, CheckCircle2, AlertCircle,
   Eye, X, Trash2, User, ChevronDown
 } from 'lucide-react';
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
-} from 'recharts';
 
-// ─── AI Diagnosis Suggestions (mock) ────────────────────────────────────────
-const aiSuggestions = [
-  { urgency: 'high', icon: '⚠️', patient: 'Rajan Mehta', suggestion: 'BP consistently elevated. Consider adjusting Lisinopril dosage to 15mg.' },
-  { urgency: 'low', icon: '✅', patient: 'Aisha Sharma', suggestion: 'HbA1c trending down. Continue current Metformin regimen. Next lab in 3 months.' },
-  { urgency: 'medium', icon: '🔍', patient: 'Dev Patel', suggestion: 'TSH slightly low. Recommend free T3/T4 panel before next prescription renewal.' },
-];
-
-const analyticsData = [
-  { month: 'Oct', patients: 38, appointments: 62 },
-  { month: 'Nov', patients: 45, appointments: 71 },
-  { month: 'Dec', patients: 41, appointments: 65 },
-  { month: 'Jan', patients: 52, appointments: 84 },
-  { month: 'Feb', patients: 49, appointments: 78 },
-  { month: 'Mar', patients: 61, appointments: 95 },
-  { month: 'Apr', patients: 58, appointments: 91 },
-];
 
 const appointmentsToday = [
   { time: '9:00 AM', patient: 'Aisha Sharma', type: 'Follow-up', duration: 30, status: 'completed' },
@@ -310,7 +291,7 @@ export default function DoctorDashboard() {
           <p style={{ color: 'rgba(240,244,255,0.45)', fontSize: 14, marginTop: 4 }}>
             {user?.specialization || 'General Practice'} · {user?.hospital || 'CureConnect Network'}
           </p>
-          <div style={{ marginTop: 14 }}><ECGLine color="#8b5cf6" height={38} /></div>
+
         </motion.div>
 
         {/* Stats */}
@@ -457,7 +438,7 @@ export default function DoctorDashboard() {
         <div id="prescriptions" style={{position:"absolute",marginTop:-80}} />
         <div id="records" style={{position:"absolute",marginTop:-80}} />
         <div id="appointments" style={{position:"absolute",marginTop:-80}} />
-        <div className="dashboard-grid-2">
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 24 }}>
           <WidgetCard title="Today's Schedule" icon={Calendar} color="#00d4ff">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {appointmentsToday.map((appt, i) => (
@@ -472,36 +453,10 @@ export default function DoctorDashboard() {
               ))}
             </div>
           </WidgetCard>
-
-          <WidgetCard title="Patient Analytics" icon={BarChart2} color="#00d4ff">
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={analyticsData} barGap={4}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                <XAxis dataKey="month" tick={{ fill: 'rgba(240,244,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: 'rgba(240,244,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ background: 'var(--bg-dropdown)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 13 }} />
-                <Bar dataKey="patients" name="New Patients" fill="#8b5cf6" radius={[4,4,0,0]} />
-                <Bar dataKey="appointments" name="Appointments" fill="#00d4ff" radius={[4,4,0,0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </WidgetCard>
         </div>
 
         {/* ── Row 3: AI Suggestions ── */}
-        <div id="ai" style={{position:"absolute",marginTop:-80}} />
-        <WidgetCard title="AI Diagnosis Alerts" icon={Brain} color="#8b5cf6">
-          <div className="ai-suggestions-grid">
-            {aiSuggestions.map((s, i) => (
-              <motion.div key={i} whileHover={{ y: -2 }} style={{ padding: '16px', background: s.urgency === 'high' ? 'rgba(255,68,68,0.08)' : s.urgency === 'medium' ? 'rgba(245,158,11,0.08)' : 'rgba(0,255,136,0.06)', border: `1px solid ${s.urgency === 'high' ? 'rgba(255,68,68,0.2)' : s.urgency === 'medium' ? 'rgba(245,158,11,0.2)' : 'rgba(0,255,136,0.15)'}`, borderRadius: 12 }}>
-                <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                  <span style={{ fontSize: 18 }}>{s.icon}</span>
-                  <p style={{ fontSize: 13, fontWeight: 700 }}>{s.patient}</p>
-                </div>
-                <p style={{ fontSize: 12, color: 'rgba(240,244,255,0.6)', lineHeight: 1.6 }}>{s.suggestion}</p>
-              </motion.div>
-            ))}
-          </div>
-        </WidgetCard>
+
 
         {/* ── Row 4: Clinic Inventory Tracker ── */}
         <div id="inventory" style={{position:"absolute",marginTop:-80}} />

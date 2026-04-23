@@ -9,24 +9,17 @@ import { useState, useEffect } from 'react';
 
 const patientNav = [
   { icon: Home, label: 'Dashboard', path: '/patient', section: 'main' },
-  { icon: Activity, label: 'Health Score', path: '/patient#health', section: 'main' },
   { icon: FileText, label: 'Health Locker', path: '/patient#locker', section: 'records' },
   { icon: Calendar, label: 'Appointments', path: '/patient#appointments', section: 'records' },
   { icon: Pill, label: 'Medications', path: '/patient#medications', section: 'records' },
-  { icon: MessageCircle, label: 'AI Assistant', path: '/patient#ai', section: 'tools' },
-  { icon: AlertTriangle, label: 'Emergency SOS', path: '/patient#sos', section: 'tools' },
-  { icon: Video, label: 'Video Consult', path: '/consult', section: 'tools' },
 ];
 
 const doctorNav = [
   { icon: Home, label: 'Dashboard', path: '/doctor', section: 'main' },
   { icon: Users, label: 'Patients', path: '/doctor#patients', section: 'main' },
   { icon: Calendar, label: 'Appointments', path: '/doctor#appointments', section: 'main' },
-  { icon: ClipboardList, label: 'Prescriptions', path: '/doctor#prescriptions', section: 'records' },
+  { icon: ClipboardList, label: 'Prescriptions', multi: false, path: '/doctor#prescriptions', section: 'records' },
   { icon: FileText, label: 'Records', path: '/doctor#records', section: 'records' },
-  { icon: BarChart2, label: 'Analytics', path: '/doctor#analytics', section: 'tools' },
-  { icon: MessageCircle, label: 'AI Diagnosis', path: '/doctor#ai', section: 'tools' },
-  { icon: Video, label: 'Video Consult', path: '/consult', section: 'tools' },
 ];
 
 export default function Sidebar({ role, mobileOpen, onClose }) {
