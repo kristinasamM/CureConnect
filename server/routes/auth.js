@@ -12,7 +12,8 @@ router.post('/register', async (req, res) => {
     const {
       name, email, password, role,
       specialization, hospital, licenseNumber,
-      bloodGroup, dateOfBirth, gender, phone
+      bloodGroup, dateOfBirth, gender, phone,
+      height, weight, chronicConditions, allergies
     } = req.body;
 
     if (!name || !email || !password || !role) {
@@ -22,21 +23,33 @@ router.post('/register', async (req, res) => {
     const exists = await User.findOne({ email: email.toLowerCase() });
     if (exists) return res.status(400).json({ message: 'Email already registered. Please sign in.' });
 
+    let healthScore = 95;
+    if (role === 'patient') {
+      const conditionsCount = Array.isArray(chronicConditions) ? chronicConditions.length : 0;
+      const allergiesCount = Array.isArray(allergies) ? allergies.length : 0;
+      healthScore -= (10 * conditionsCount);
+      healthScore -= (5 * allergiesCount);
+      if (weight && height) {
+        const bmi = weight / ((height / 100) * (height / 100));
+        if (bmi > 25 || bmi < 18.5) healthScore -= 5;
+      }
+      healthScore = Math.max(healthScore, 40); // minimum 40
+    }
+
     const user = await User.create({
       name, email, password, role, phone: phone || '',
       ...(role === 'doctor' && { specialization, hospital, licenseNumber }),
-      ...(role === 'patient' && { bloodGroup, dateOfBirth, gender })
+      ...(role === 'patient' && { 
+        bloodGroup, dateOfBirth, gender,
+        height, weight, chronicConditions, allergies,
+        healthScore
+      })
     });
 
     console.log(`✅ New ${role} registered: ${user.name} (${user.email}) — ID: ${user._id}`);
 
     res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      avatar: user.avatar || '',
-      healthScore: user.healthScore,
+      ...user.toJSON(),
       token: generateToken(user._id)
     });
   } catch (error) {
@@ -59,12 +72,7 @@ router.post('/login', async (req, res) => {
     console.log(`🔑 Login: ${user.name} (${user.role})`);
 
     res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      avatar: user.avatar || '',
-      healthScore: user.healthScore,
+      ...user.toJSON(),
       token: generateToken(user._id)
     });
   } catch (error) {

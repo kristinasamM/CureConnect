@@ -115,10 +115,11 @@ const vitalsData = [
   { day: 'Sun', bp: 119, hr: 70, o2: 99 },
 ];
 
-const medications = [
-  { name: 'Metformin', dose: '500mg', freq: 'Twice daily', time: '8 AM / 8 PM', status: 'taken', color: '#00d4ff' },
-  { name: 'Lisinopril', dose: '10mg', freq: 'Once daily', time: '9:00 AM', status: 'pending', color: '#8b5cf6' },
-  { name: 'Atorvastatin', dose: '20mg', freq: 'Once daily', time: '9:00 PM', status: 'pending', color: '#00ff88' },
+const baseMedications = [
+  { name: 'Metformin', dose: '500mg', freq: 'Twice daily', time: '8 AM / 8 PM', status: 'taken', color: '#00d4ff', condition: 'diabetes' },
+  { name: 'Lisinopril', dose: '10mg', freq: 'Once daily', time: '9:00 AM', status: 'pending', color: '#8b5cf6', condition: 'hypertension' },
+  { name: 'Atorvastatin', dose: '20mg', freq: 'Once daily', time: '9:00 PM', status: 'pending', color: '#00ff88', condition: 'high cholesterol' },
+  { name: 'Albuterol', dose: '90mcg', freq: 'As needed', time: 'PRN', status: 'pending', color: '#f59e0b', condition: 'asthma' },
 ];
 
 const appointments = [
@@ -218,10 +219,37 @@ export default function PatientDashboard() {
   // SOS state
   const [sosCountdown, setSosCountdown] = useState(null);
 
+  // Extract user health conditions
+  const userConditionsText = (user?.chronicConditions || []).join(' ').toLowerCase();
+
+  // Dynamically compute medications
+  const medications = baseMedications.filter(m => userConditionsText.includes(m.condition)).length > 0 
+    ? baseMedications.filter(m => userConditionsText.includes(m.condition) || m.condition === 'high cholesterol')
+    : [
+      { name: 'Vitamin C', dose: '500mg', freq: 'Once daily', time: '9:00 AM', status: 'pending', color: '#00d4ff' },
+      { name: 'Vitamin D3', dose: '1000 IU', freq: 'Once daily', time: '9:00 AM', status: 'taken', color: '#00ff88' }
+    ];
+
   // Medications check state
   const [medStatus, setMedStatus] = useState(
     medications.reduce((acc, m, i) => ({ ...acc, [i]: m.status === 'taken' }), {})
   );
+
+  // Dynamically compute vitals
+  const vitals = [
+    { icon: Heart, label: 'Heart Rate', value: userConditionsText.includes('arrhythmia') ? '88' : '72', unit: 'bpm', color: '#ff4444' },
+    { icon: Activity, label: 'Blood Pressure', value: userConditionsText.includes('hypertension') || userConditionsText.includes('bp') ? '142/90' : '118/76', unit: 'mmHg', color: '#00d4ff' },
+    { icon: Droplets, label: 'Blood Oxygen', value: userConditionsText.includes('asthma') ? '94' : '98', unit: '%', color: '#00ff88' },
+    { icon: Thermometer, label: 'Temperature', value: '98.4', unit: '°F', color: '#f59e0b' },
+  ];
+  if (userConditionsText.includes('diabetes')) {
+    vitals.push({ icon: Activity, label: 'Blood Sugar', value: '145', unit: 'mg/dL', color: '#8b5cf6' });
+  }
+  if (user?.height && user?.weight) {
+    const heightM = user.height / 100;
+    const bmi = (user.weight / (heightM * heightM)).toFixed(1);
+    vitals.push({ icon: User, label: 'BMI', value: bmi, unit: '', color: '#ec4899' });
+  }
 
   // Appointment booking state
   const [showBooking, setShowBooking] = useState(false);
@@ -370,12 +398,7 @@ export default function PatientDashboard() {
     }), 1000);
   };
 
-  const vitals = [
-    { icon: Heart, label: 'Heart Rate', value: '72', unit: 'bpm', color: '#ff4444' },
-    { icon: Activity, label: 'Blood Pressure', value: '118/76', unit: 'mmHg', color: '#00d4ff' },
-    { icon: Droplets, label: 'Blood Oxygen', value: '98', unit: '%', color: '#00ff88' },
-    { icon: Thermometer, label: 'Temperature', value: '98.4', unit: '°F', color: '#f59e0b' },
-  ];
+  // Removed const vitals as it was moved up
 
   // Specialty suggestions based on stored documents
   const specialtySuggestions = getSuggestedSpecialties(documents, user?.chronicConditions?.join(' ') || 'diabetes hypertension');

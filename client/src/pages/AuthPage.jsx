@@ -66,6 +66,10 @@ export default function AuthPage() {
   const [licenseNumber, setLicenseNumber] = useState('');
   const [bloodGroup, setBloodGroup]       = useState('');
   const [gender, setGender]               = useState('');
+  const [height, setHeight]               = useState('');
+  const [weight, setWeight]               = useState('');
+  const [chronicConditions, setChronicConditions] = useState('');
+  const [allergies, setAllergies]         = useState('');
 
   // ── Switch to sign-in tab, keeping the email pre-filled ─────────────────
   const switchToSignIn = () => {
@@ -101,7 +105,11 @@ export default function AuthPage() {
         // ── REGISTER ─────────────────────────────────────────────────────
         const userData = {
           name, email, password, role, phone,
-          specialization, hospital, licenseNumber, bloodGroup, gender
+          specialization, hospital, licenseNumber, bloodGroup, gender,
+          height: height ? Number(height) : undefined,
+          weight: weight ? Number(weight) : undefined,
+          chronicConditions: chronicConditions ? chronicConditions.split(',').map(s => s.trim()).filter(Boolean) : [],
+          allergies: allergies ? allergies.split(',').map(s => s.trim()).filter(Boolean) : [],
         };
         const data = await register(userData);
         setSuccess('✅ Account created! Taking you to your dashboard...');
@@ -347,18 +355,26 @@ export default function AuthPage() {
                     </>
                   ) : (
                     <>
-                      <select className="input-glass" value={bloodGroup} onChange={e => setBloodGroup(e.target.value)}
-                        style={{ background: 'rgba(10,22,40,0.9)', color: bloodGroup ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-                        <option value="">Blood Group (optional)</option>
-                        {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(g => <option key={g} value={g}>{g}</option>)}
-                      </select>
-                      <select className="input-glass" value={gender} onChange={e => setGender(e.target.value)}
-                        style={{ background: 'rgba(10,22,40,0.9)' }}>
-                        <option value="">Gender (optional)</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
-                      </select>
+                      <div style={{display: 'flex', gap: 10}}>
+                        <select className="input-glass" value={bloodGroup} onChange={e => setBloodGroup(e.target.value)}
+                          style={{ background: 'rgba(10,22,40,0.9)', color: bloodGroup ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+                          <option value="">Blood Group (optional)</option>
+                          {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(g => <option key={g} value={g}>{g}</option>)}
+                        </select>
+                        <select className="input-glass" value={gender} onChange={e => setGender(e.target.value)}
+                          style={{ background: 'rgba(10,22,40,0.9)' }}>
+                          <option value="">Gender (optional)</option>
+                          <option value="male">Male</option>
+                          <option value="female">Female</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                      <div style={{display: 'flex', gap: 10}}>
+                        <input className="input-glass" placeholder="Height (cm)" type="number" value={height} onChange={e => setHeight(e.target.value)} />
+                        <input className="input-glass" placeholder="Weight (kg)" type="number" value={weight} onChange={e => setWeight(e.target.value)} />
+                      </div>
+                      <input className="input-glass" placeholder="Pre-existing Conditions (e.g. Diabetes, Asthma)" value={chronicConditions} onChange={e => setChronicConditions(e.target.value)} />
+                      <input className="input-glass" placeholder="Allergies (e.g. Penicillin, Peanuts)" value={allergies} onChange={e => setAllergies(e.target.value)} />
                     </>
                   )}
                 </motion.div>

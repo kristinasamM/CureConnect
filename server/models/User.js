@@ -20,6 +20,8 @@ const UserSchema = new mongoose.Schema({
     phone: { type: String, default: '' },
     relation: { type: String, default: '' }
   },
+  height: { type: Number },
+  weight: { type: Number },
 
   // Doctor-specific
   specialization: { type: String, default: '' },
