@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, api } from '../context/AuthContext';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import ECGLine from '../components/ECGLine';
@@ -17,15 +17,7 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
 } from 'recharts';
 
-// ─── Doctors for booking ─────────────────────────────────────────────────────
-const AVAILABLE_DOCTORS = [
-  { name: 'Dr. Sarah Chen', specialty: 'Cardiologist', available: ['9:00 AM','10:00 AM','2:00 PM','4:00 PM'] },
-  { name: 'Dr. Raj Kumar', specialty: 'Endocrinologist', available: ['10:00 AM','11:30 AM','3:00 PM'] },
-  { name: 'Dr. Priya Mehta', specialty: 'General Physician', available: ['8:30 AM','12:00 PM','1:00 PM','5:00 PM'] },
-  { name: 'Dr. Aman Verma', specialty: 'Pulmonologist', available: ['9:30 AM','2:30 PM','4:30 PM'] },
-  { name: 'Dr. Neha Sharma', specialty: 'Dermatologist', available: ['10:30 AM','1:30 PM','3:30 PM'] },
-  { name: 'Dr. Arjun Patel', specialty: 'Psychiatrist', available: ['11:00 AM','2:00 PM','6:00 PM'] },
-];
+// Dynamic Doctors list is fetched from API.
 
 // ─── Helper: generate 8-char access code ───────────────────────────────────
 const genCode = () => {
@@ -194,6 +186,8 @@ const DOC_CATEGORIES = [
 // ──────────────────────────────────────────────────────────────────────────────
 export default function PatientDashboard() {
   const { user } = useAuth();
+  
+  const [availableDoctors, setAvailableDoctors] = useState([]);
 
   // Mobile sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -259,53 +253,101 @@ export default function PatientDashboard() {
   });
   const [bookSuccess, setBookSuccess] = useState(false);
 
-  // Load appointments from localStorage
+  // Fetch initial dynamic data from backend
   useEffect(() => {
-    const userId = user?._id || 'demo';
-    const stored = JSON.parse(localStorage.getItem(`cc_appointments_${userId}`) || '[]');
-    setBookedAppointments(stored);
+    if (!user) return;
+    
+    api.get('/users/doctors').then(res => {
+      const docsWithSlots = res.data.map(d => ({
+        ...d,
+        available: ['10:00 AM', '1:00 PM', '3:00 PM', '5:00 PM']
+      }));
+      setAvailableDoctors(docsWithSlots);
+    }).catch(console.error);
+
+    api.get('/appointments').then(res => {
+      const mapped = res.data.map(a => ({
+        id: a._id,
+        doctor: a.doctor?.name || 'Unknown Doctor',
+        specialty: a.doctor?.specialization || '',
+        date: new Date(a.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+        time: a.time,
+        type: a.type,
+        status: a.status
+      }));
+      setBookedAppointments(mapped);
+    }).catch(console.error);
+
+    api.get('/records').then(res => {
+      const mappedDocs = res.data.map(d => {
+        let cat = 'other';
+        if (d.type === 'lab_report') cat = 'report';
+        else if (d.type === 'imaging') cat = 'image';
+        else if (d.type === 'prescription') cat = 'prescription';
+        return {
+          id: d._id,
+          name: d.title,
+          type: d.fileType,
+          size: 'DB stored',
+          date: new Date(d.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+          data: d.fileUrl,
+          category: cat
+        };
+      });
+      setDocuments(mappedDocs);
+    }).catch(console.error);
+
   }, [user]);
 
-  const handleBookAppointment = () => {
+  const handleBookAppointment = async () => {
     if (!bookForm.doctor || !bookForm.date || !bookForm.time) return;
-    const userId = user?._id || 'demo';
-    const doctorInfo = AVAILABLE_DOCTORS.find(d => d.name === bookForm.doctor);
-    const newAppt = {
-      id: Date.now(),
-      doctor: bookForm.doctor,
-      specialty: doctorInfo?.specialty || bookForm.specialty,
-      date: new Date(bookForm.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-      time: bookForm.time,
-      type: bookForm.type,
-      reason: bookForm.reason,
-      status: 'confirmed',
-      bookedAt: new Date().toLocaleDateString('en-IN'),
-    };
-    const updated = [newAppt, ...bookedAppointments];
-    localStorage.setItem(`cc_appointments_${userId}`, JSON.stringify(updated));
-    setBookedAppointments(updated);
-    setBookSuccess(true);
-    setTimeout(() => { setBookSuccess(false); setShowBooking(false); setBookForm({ doctor: '', specialty: '', date: '', time: '', type: 'video', reason: '' }); }, 1800);
+    
+    const doctorInfo = availableDoctors.find(d => d._id === bookForm.doctor);
+    
+    try {
+      const { data } = await api.post('/appointments', {
+        doctor: bookForm.doctor,
+        date: new Date(bookForm.date),
+        time: bookForm.time,
+        type: bookForm.type,
+        reason: bookForm.reason
+      });
+
+      const newAppt = {
+        id: data._id,
+        doctor: doctorInfo?.name || 'Doctor',
+        specialty: doctorInfo?.specialization || '',
+        date: new Date(data.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+        time: data.time,
+        type: data.type,
+        status: data.status
+      };
+      
+      setBookedAppointments([newAppt, ...bookedAppointments]);
+      setBookSuccess(true);
+      setTimeout(() => { setBookSuccess(false); setShowBooking(false); setBookForm({ doctor: '', specialty: '', date: '', time: '', type: 'video', reason: '' }); }, 1800);
+    } catch (error) {
+      console.error('Booking failed', error);
+    }
   };
 
-  const cancelAppointment = (id) => {
-    const userId = user?._id || 'demo';
-    const updated = bookedAppointments.filter(a => a.id !== id);
-    localStorage.setItem(`cc_appointments_${userId}`, JSON.stringify(updated));
-    setBookedAppointments(updated);
+  const cancelAppointment = async (id) => {
+    try {
+      await api.delete(`/appointments/${id}`);
+      setBookedAppointments(bookedAppointments.filter(a => a.id !== id));
+    } catch (error) {
+      console.error('Cancel failed', error);
+    }
   };
 
-  // Load documents and access code from localStorage
+  // Load access code from localStorage
   useEffect(() => {
     const userId = user?._id || 'demo';
-    const stored = localStorage.getItem(`cc_docs_${userId}`);
-    if (stored) setDocuments(JSON.parse(stored));
     const code = localStorage.getItem(`cc_code_${userId}`);
     if (code) setAccessCode(code);
     else {
       const newCode = genCode();
       localStorage.setItem(`cc_code_${userId}`, newCode);
-      // Register code → patient mapping
       const codemap = JSON.parse(localStorage.getItem('cc_codemap') || '{}');
       codemap[newCode] = userId;
       localStorage.setItem('cc_codemap', JSON.stringify(codemap));
@@ -342,32 +384,49 @@ export default function PatientDashboard() {
     return 'other';
   };
 
+  const mapCategoryToBackend = (cat) => {
+    if (cat === 'report') return 'lab_report';
+    if (cat === 'image') return 'imaging';
+    return cat === 'prescription' ? 'prescription' : 'other';
+  };
+
   // File upload handler
   const handleFileUpload = (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
     setUploading(true);
-    const userId = user?._id || 'demo';
     let processed = 0;
     const newDocs = [];
 
     files.forEach(file => {
       const reader = new FileReader();
-      reader.onload = (ev) => {
-        newDocs.push({
-          id: Date.now() + Math.random(),
-          name: file.name,
-          type: file.type,
-          size: (file.size / 1024).toFixed(1) + ' KB',
-          date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-          data: ev.target.result,
-          category: categorizeFile(file),
-        });
+      reader.onload = async (ev) => {
+        const catFrontend = categorizeFile(file);
+        try {
+          const { data } = await api.post('/records', {
+            title: file.name,
+            type: mapCategoryToBackend(catFrontend),
+            fileUrl: ev.target.result,
+            fileName: file.name,
+            fileType: file.type
+          });
+          
+          newDocs.push({
+            id: data._id,
+            name: data.title,
+            type: data.fileType,
+            size: (file.size / 1024).toFixed(1) + ' KB',
+            date: new Date(data.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+            data: data.fileUrl,
+            category: catFrontend
+          });
+        } catch (error) {
+          console.error("Upload failed", error);
+        }
+        
         processed++;
         if (processed === files.length) {
-          const updated = [...documents, ...newDocs];
-          setDocuments(updated);
-          localStorage.setItem(`cc_docs_${userId}`, JSON.stringify(updated));
+          setDocuments(prev => [...newDocs, ...prev]);
           setUploading(false);
         }
       };
@@ -376,11 +435,13 @@ export default function PatientDashboard() {
     e.target.value = '';
   };
 
-  const deleteDocument = (id) => {
-    const userId = user?._id || 'demo';
-    const updated = documents.filter(d => d.id !== id);
-    setDocuments(updated);
-    localStorage.setItem(`cc_docs_${userId}`, JSON.stringify(updated));
+  const deleteDocument = async (id) => {
+    try {
+      await api.delete(`/records/${id}`);
+      setDocuments(docs => docs.filter(d => d.id !== id));
+    } catch (error) {
+      console.error("Delete failed", error);
+    }
   };
 
   const openDocument = (doc) => {
@@ -800,11 +861,11 @@ export default function PatientDashboard() {
                         <div>
                           <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'JetBrains Mono, monospace', display: 'block', marginBottom: 6 }}>SELECT DOCTOR</label>
                           <select className="input-glass" value={bookForm.doctor}
-                            onChange={e => { const doc = AVAILABLE_DOCTORS.find(d => d.name === e.target.value); setBookForm(f => ({ ...f, doctor: e.target.value, specialty: doc?.specialty || '', time: '' })); }}
+                            onChange={e => { const doc = availableDoctors.find(d => d._id === e.target.value); setBookForm(f => ({ ...f, doctor: e.target.value, specialty: doc?.specialization || '', time: '' })); }}
                             style={{ background: 'var(--bg-card)' }}>
                             <option value="">Choose a doctor...</option>
-                            {AVAILABLE_DOCTORS.map(d => (
-                              <option key={d.name} value={d.name}>{d.name} — {d.specialty}</option>
+                            {availableDoctors.map(d => (
+                              <option key={d._id} value={d._id}>{d.name} — {d.specialization || 'Physician'}</option>
                             ))}
                           </select>
                         </div>
@@ -825,7 +886,7 @@ export default function PatientDashboard() {
                           <div>
                             <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'JetBrains Mono, monospace', display: 'block', marginBottom: 6 }}>AVAILABLE SLOTS</label>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                              {AVAILABLE_DOCTORS.find(d => d.name === bookForm.doctor)?.available.map(slot => (
+                              {availableDoctors.find(d => d._id === bookForm.doctor)?.available?.map(slot => (
                                 <button key={slot} onClick={() => setBookForm(f => ({ ...f, time: slot }))}
                                   style={{ padding: '8px 14px', background: bookForm.time === slot ? 'rgba(139,92,246,0.3)' : 'rgba(255,255,255,0.04)', border: `1px solid ${bookForm.time === slot ? 'rgba(139,92,246,0.5)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 8, color: bookForm.time === slot ? '#8b5cf6' : 'rgba(240,244,255,0.6)', fontSize: 13, cursor: 'pointer', fontFamily: 'Outfit, sans-serif', fontWeight: bookForm.time === slot ? 700 : 400, transition: 'all 0.15s' }}>
                                   {slot}
