@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   Heart, Home, FileText, Calendar, Pill,
   MessageCircle, AlertTriangle, Users, BarChart2,
-  ClipboardList, Activity, Stethoscope, ChevronLeft, X
+  ClipboardList, Activity, Stethoscope, ChevronLeft, X, Video
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -15,6 +15,7 @@ const patientNav = [
   { icon: Pill, label: 'Medications', path: '/patient#medications', section: 'records' },
   { icon: MessageCircle, label: 'AI Assistant', path: '/patient#ai', section: 'tools' },
   { icon: AlertTriangle, label: 'Emergency SOS', path: '/patient#sos', section: 'tools' },
+  { icon: Video, label: 'Video Consult', path: '/consult', section: 'tools' },
 ];
 
 const doctorNav = [
@@ -25,6 +26,7 @@ const doctorNav = [
   { icon: FileText, label: 'Records', path: '/doctor#records', section: 'records' },
   { icon: BarChart2, label: 'Analytics', path: '/doctor#analytics', section: 'tools' },
   { icon: MessageCircle, label: 'AI Diagnosis', path: '/doctor#ai', section: 'tools' },
+  { icon: Video, label: 'Video Consult', path: '/consult', section: 'tools' },
 ];
 
 export default function Sidebar({ role, mobileOpen, onClose }) {
