@@ -1,10 +1,10 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
+
 import {
   Bell, Settings, LogOut, Search,
-  ChevronDown, Pill, X, Clock, User, FileText, Menu, AlertTriangle, Sun, Moon
+  ChevronDown, Pill, X, Clock, User, FileText, Menu, AlertTriangle
 } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import ECGLine from './ECGLine';
@@ -53,7 +53,7 @@ function HighlightText({ text, query }) {
 
 export default function Navbar({ role, onToggleSidebar }) {
   const { user, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showNotifs, setShowNotifs] = useState(false);
@@ -507,35 +507,7 @@ const handleSelect = (item) => {
         gap: isMobile ? 6 : 12,
       }}>
 
-        {/* Theme Toggle */}
-        <motion.button
-          onClick={toggleTheme}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          className="btn-ghost"
-          style={{
-            padding: '8px',
-            borderRadius: '50%',
-            width: isMobile ? 34 : 38,
-            height: isMobile ? 34 : 38,
-            justifyContent: 'center',
-            position: 'relative',
-          }}
-          aria-label="Toggle theme"
-          id="theme-toggle-btn"
-        >
-          <AnimatePresence mode="wait">
-            {theme === 'dark' ? (
-              <motion.div key="sun" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.2 }}>
-                <Sun size={16} />
-              </motion.div>
-            ) : (
-              <motion.div key="moon" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.2 }}>
-                <Moon size={16} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.button>
+
 
         {/* Notification Bell */}
         <div style={{ position: 'relative' }}>
