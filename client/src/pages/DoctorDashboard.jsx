@@ -327,7 +327,7 @@ export default function DoctorDashboard() {
               <p style={{ fontSize: 11, color: 'rgba(240,244,255,0.35)', fontFamily: 'JetBrains Mono, monospace' }}>{s.delta}</p>
             </motion.div>
           ))}
-
+        </div>
 
           {/* ── Symptom Cascade Alerts ── */}
           <div id="alerts" style={{position:"absolute",marginTop:-80}} />
