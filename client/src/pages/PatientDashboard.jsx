@@ -4,6 +4,7 @@ import { useAuth, api } from '../context/AuthContext';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import SymptomLogger from '../components/SymptomLogger';
+import SmartTriage from '../components/SmartTriage';
 
 import {
   Activity, FileText, Calendar, Pill,
@@ -538,6 +539,12 @@ export default function PatientDashboard() {
           <WidgetCard title="Daily Symptom Tracker" icon={Activity} color="#f59e0b">
             <SymptomLogger />
           </WidgetCard>
+        </div>
+
+        {/* ── NEW: Smart Triage Engine ── */}
+        <div id="triage" style={{position:"absolute",marginTop:-80}} />
+        <div style={{ marginBottom: 24 }}>
+          <SmartTriage />
         </div>
 
         {/* ── Row 2: Documents + Access Code ── */}
