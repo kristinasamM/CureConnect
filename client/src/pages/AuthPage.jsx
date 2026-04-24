@@ -228,7 +228,7 @@ export default function AuthPage() {
                   <p style={{ color: 'rgba(240,244,255,0.5)', fontSize: 12, fontFamily: 'JetBrains Mono, monospace', lineHeight: 1.8 }}>
                     Open a <span style={{ color: '#fbbf24' }}>new terminal</span> and run:<br />
                     <span style={{ color: '#00ff88' }}>Backend is being reached at:</span><br />
-<span style={{ color: '#00ff88' }}>https://aisham30-cureconnect.onrender.com</span>
+                    <span style={{ color: '#00ff88' }}>https://cureconnect-hfea.onrender.com</span>
                   </p>
                 </div>
               </motion.div>
