@@ -1,5 +1,6 @@
 const express = require('express');
 const Symptom = require('../models/Symptom');
+const TriageRule = require('../models/TriageRule');
 const { protect } = require('../middleware/auth');
 const router = express.Router();
 
@@ -23,6 +24,61 @@ router.post('/', protect, async (req, res) => {
     });
 
     res.status(201).json(log);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────
+// POST /api/symptoms/triage — Smart Triage Engine
+// ─────────────────────────────────────────────────────────
+router.post('/triage', protect, async (req, res) => {
+  try {
+    const { symptoms } = req.body;
+    if (!symptoms || symptoms.length === 0) return res.status(400).json({ message: 'No symptoms provided' });
+
+    const rules = await TriageRule.find({}); // Dynamic Matrix from MongoDB
+    let totalScore = 0;
+    let highestSeverityRule = null;
+
+    symptoms.forEach(sym => {
+      const lower = sym.toLowerCase();
+      rules.forEach(rule => {
+        if (lower.includes(rule.symptomKeyword.toLowerCase())) {
+          totalScore += rule.score;
+          if (!highestSeverityRule || rule.score > highestSeverityRule.score) {
+            highestSeverityRule = rule;
+          }
+        }
+      });
+    });
+
+    if (!highestSeverityRule) {
+      return res.json({ priority: 'Green', score: totalScore, specialistType: 'General Physician', urgency: 'Within 3-5 days' });
+    }
+
+    const priority = totalScore >= 10 ? 'Red' : highestSeverityRule.priority;
+    const urgency = priority === 'Red' ? 'Immediate (ER)' : highestSeverityRule.urgencyEstimate;
+
+    res.json({
+      priority,
+      score: totalScore,
+      specialistType: highestSeverityRule.specialistType,
+      urgency,
+      triggeredBy: highestSeverityRule.symptomKeyword
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────
+// GET /api/symptoms/triage/rules — View Smart Triage Matrix (Doctor)
+// ─────────────────────────────────────────────────────────
+router.get('/triage/rules', protect, async (req, res) => {
+  try {
+    const rules = await TriageRule.find({}).sort({ score: -1 });
+    res.json(rules);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

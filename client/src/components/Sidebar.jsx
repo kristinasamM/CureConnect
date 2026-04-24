@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 
 const patientNav = [
   { icon: Home, label: 'Dashboard', path: '/patient', section: 'main' },
+  { icon: Heart, label: 'Smart Triage', path: '/patient#triage', section: 'main' },
   { icon: Activity, label: 'Symptom Tracker', path: '/patient#symptoms', section: 'main' },
   { icon: FileText, label: 'Health Locker', path: '/patient#locker', section: 'records' },
   { icon: Calendar, label: 'Appointments', path: '/patient#appointments', section: 'records' },

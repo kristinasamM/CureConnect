@@ -10,7 +10,7 @@ import {
   Plus, Search, ChevronRight, Clock, FileText,
   TrendingUp, Stethoscope, Activity, Pill, Edit3,
   Send, Zap, Star, Key, CheckCircle2, AlertCircle,
-  Eye, X, Trash2, User, ChevronDown, CheckCircle, AlertTriangle
+  Eye, X, Trash2, User, ChevronDown, ActivitySquare, CheckCircle, AlertTriangle
 } from 'lucide-react';
 
 
@@ -193,6 +193,9 @@ export default function DoctorDashboard() {
   const [cascadeAlerts, setCascadeAlerts] = useState([]);
   const [loadingCascades, setLoadingCascades] = useState(true);
 
+  // Smart Triage Matrix Rules
+  const [triageRules, setTriageRules] = useState([]);
+
   // Appointments state
   const [appointments, setAppointments] = useState([]);
 
@@ -202,13 +205,21 @@ export default function DoctorDashboard() {
       try {
         const res = await api.get('/symptoms/cascade-alerts');
         setCascadeAlerts(res.data);
-      } catch (err) {
-        console.error('Failed to fetch cascade alerts:', err);
       } finally {
         setLoadingCascades(false);
       }
     };
     fetchCascades();
+
+    const fetchRules = async () => {
+      try {
+        const res = await api.get('/symptoms/triage/rules');
+        setTriageRules(res.data);
+      } catch (err) {
+        console.error('Failed to fetch triage rules:', err);
+      }
+    };
+    fetchRules();
   }, []);
 
   // Fetch appointments from backend
@@ -639,11 +650,27 @@ export default function DoctorDashboard() {
           </div>
 
           {/* ── Row 3: AI Suggestions ── */}
-
-
-
-
-          {/* ── Prescription Modal ── */}
+          <div id="triage" style={{ position: "absolute", marginTop: -80 }} />
+          {triageRules && Array.isArray(triageRules) && triageRules.length > 0 && (
+            <WidgetCard title="Smart Triage Algorithm Matrix" icon={ActivitySquare} color="#ec4899" style={{ marginTop: 24, marginBottom: 24 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
+                {triageRules.map(rule => (
+                  <div key={rule._id} style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.02)', border: `1px solid ${rule.priority === 'Red' ? 'rgba(255,68,68,0.3)' : rule.priority === 'Yellow' ? 'rgba(245,158,11,0.3)' : 'rgba(0,255,136,0.3)'}`, borderRadius: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <span style={{ fontSize: 13, fontWeight: 800, textTransform: 'capitalize' }}>"{rule.symptomKeyword}"</span>
+                      <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: 10, fontWeight: 800, background: rule.priority === 'Red' ? 'rgba(255,68,68,0.2)' : rule.priority === 'Yellow' ? 'rgba(245,158,11,0.2)' : 'rgba(0,255,136,0.2)', color: rule.priority === 'Red' ? '#ff4444' : rule.priority === 'Yellow' ? '#f59e0b' : '#00ff88' }}>
+                        {rule.priority}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                      <div><strong>Route to:</strong> {rule.specialistType}</div>
+                      <div><strong>Urgency:</strong> {rule.urgencyEstimate} (+{rule.score} pts)</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </WidgetCard>
+          )}          {/* ── Prescription Modal ── */}
           {showPrescPad && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-overlay)', backdropFilter: 'blur(10px)', zIndex: 500 }} onClick={e => { if (e.target === e.currentTarget) setShowPrescPad(false); }}>
               <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ width: '100%', maxWidth: 520, maxHeight: '88vh', overflowY: 'auto', padding: 28, border: '1px solid rgba(139,92,246,0.3)', boxShadow: '0 16px 40px rgba(139,92,246,0.12)' }}>
