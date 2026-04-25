@@ -30,6 +30,20 @@ router.post('/', protect, async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────
+// Built-in Triage Rules (fallback when DB collection is empty)
+// ─────────────────────────────────────────────────────────
+const FALLBACK_TRIAGE_RULES = [
+  { symptomKeyword: 'chest pain',     priority: 'Red',    score: 10, specialistType: 'Cardiologist',          urgencyEstimate: 'Immediate (ER)' },
+  { symptomKeyword: 'breathlessness', priority: 'Red',    score: 9,  specialistType: 'Pulmonologist',         urgencyEstimate: 'Immediate (ER)' },
+  { symptomKeyword: 'numbness',       priority: 'Red',    score: 8,  specialistType: 'Neurologist',           urgencyEstimate: 'Within 1 hour' },
+  { symptomKeyword: 'fever',          priority: 'Yellow', score: 5,  specialistType: 'General Physician',     urgencyEstimate: 'Within 24 hours' },
+  { symptomKeyword: 'nausea',         priority: 'Yellow', score: 4,  specialistType: 'Gastroenterologist',    urgencyEstimate: 'Within 24 hours' },
+  { symptomKeyword: 'dizziness',      priority: 'Yellow', score: 5,  specialistType: 'Neurologist',           urgencyEstimate: 'Within 12 hours' },
+  { symptomKeyword: 'cough',          priority: 'Green',  score: 3,  specialistType: 'General Physician',     urgencyEstimate: 'Within 3-5 days' },
+  { symptomKeyword: 'headache',       priority: 'Yellow', score: 4,  specialistType: 'Neurologist',           urgencyEstimate: 'Within 24 hours' },
+];
+
+// ─────────────────────────────────────────────────────────
 // POST /api/symptoms/triage — Smart Triage Engine
 // ─────────────────────────────────────────────────────────
 router.post('/triage', protect, async (req, res) => {
@@ -37,7 +51,12 @@ router.post('/triage', protect, async (req, res) => {
     const { symptoms } = req.body;
     if (!symptoms || symptoms.length === 0) return res.status(400).json({ message: 'No symptoms provided' });
 
-    const rules = await TriageRule.find({}); // Dynamic Matrix from MongoDB
+    // Pull rules from MongoDB first; if collection is empty, use built-in fallback
+    let rules = await TriageRule.find({});
+    if (!rules || rules.length === 0) {
+      rules = FALLBACK_TRIAGE_RULES;
+    }
+
     let totalScore = 0;
     let highestSeverityRule = null;
 
@@ -77,7 +96,10 @@ router.post('/triage', protect, async (req, res) => {
 // ─────────────────────────────────────────────────────────
 router.get('/triage/rules', protect, async (req, res) => {
   try {
-    const rules = await TriageRule.find({}).sort({ score: -1 });
+    let rules = await TriageRule.find({}).sort({ score: -1 });
+    if (!rules || rules.length === 0) {
+      rules = [...FALLBACK_TRIAGE_RULES].sort((a, b) => b.score - a.score);
+    }
     res.json(rules);
   } catch (error) {
     res.status(500).json({ message: error.message });
